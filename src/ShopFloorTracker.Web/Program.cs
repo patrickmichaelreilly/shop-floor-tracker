@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ShopFloorTracker.Infrastructure.Data;
 using ShopFloorTracker.Web.Hubs;
 using ShopFloorTracker.Web.Services;
+using ShopFloorTracker.Web.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -221,6 +222,14 @@ app.MapGet("/sorting", async (ShopFloorDbContext context) =>
         .assignment-result { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; }
         .assignment-success { background-color: #d5f4e6; border: 1px solid #27ae60; color: #1e7e34; }
         .assignment-error { background-color: #f8d7da; border: 1px solid #e74c3c; color: #721c24; }
+        
+        /* Flash animation for live updates */
+        .flash { animation: flash 1s ease-in-out; }
+        @keyframes flash {
+            0% { background-color: inherit; }
+            50% { background-color: #fff3cd; border-color: #ffeaa7; }
+            100% { background-color: inherit; }
+        }
     </style>
 </head>
 <body>
@@ -318,6 +327,7 @@ app.MapGet("/sorting", async (ShopFloorDbContext context) =>
 
     html += @"
     </div>" + SignalRClientScript + @"
+    <script src='/js/sorting-live.js'></script>
 </body>
 </html>";
 
@@ -367,7 +377,7 @@ static (int rackId, int row, int column)? FindOptimalSlot(List<ShopFloorTracker.
 }
 
 // Handle smart part scanning with automatic slot assignment
-app.MapPost("/sorting/smart-scan", async (HttpContext context, ShopFloorDbContext dbContext) =>
+app.MapPost("/sorting/smart-scan", async (HttpContext context, ShopFloorDbContext dbContext, IStatusBroadcaster statusBroadcaster) =>
 {
     var form = await context.Request.ReadFormAsync();
     var partNumber = form["partNumber"].ToString().Trim();
@@ -430,6 +440,9 @@ app.MapPost("/sorting/smart-scan", async (HttpContext context, ShopFloorDbContex
     dbContext.ScanActivities.Add(scanActivity);
     await dbContext.SaveChangesAsync();
     
+    // Broadcast the part status change
+    await statusBroadcaster.BroadcastPartStatusAsync(part);
+    
     var rackName = storageRacks.First(r => r.Id == optimalSlot.Value.rackId).Name;
     return Results.Redirect($"/sorting?success={partNumber}&rack={rackName}&row={optimalSlot.Value.row}&col={optimalSlot.Value.column}");
 });
@@ -488,6 +501,14 @@ app.MapGet("/assembly", async (ShopFloorDbContext context) =>
         .assemble-button:hover { background-color: #229954; }
         .ready-indicator { background-color: #d5f4e6; color: #1e7e34; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; font-weight: bold; }
         .in-progress-indicator { background-color: #fff3cd; color: #856404; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; font-weight: bold; }
+        
+        /* Flash animation for live updates */
+        .flash { animation: flash 1s ease-in-out; }
+        @keyframes flash {
+            0% { background-color: inherit; }
+            50% { background-color: #fff3cd; border-color: #ffeaa7; }
+            100% { background-color: inherit; }
+        }
     </style>
 </head>
 <body>
@@ -632,6 +653,7 @@ app.MapGet("/assembly", async (ShopFloorDbContext context) =>
 
     html += @"
     </div>" + SignalRClientScript + @"
+    <script src='/js/assembly-live.js'></script>
 </body>
 </html>";
 
@@ -639,7 +661,7 @@ app.MapGet("/assembly", async (ShopFloorDbContext context) =>
 });
 
 // Handle product assembly completion
-app.MapPost("/assembly/complete", async (HttpContext context, ShopFloorDbContext dbContext) =>
+app.MapPost("/assembly/complete", async (HttpContext context, ShopFloorDbContext dbContext, IStatusBroadcaster statusBroadcaster) =>
 {
     var form = await context.Request.ReadFormAsync();
     var productNumber = form["productNumber"].ToString().Trim();
@@ -698,6 +720,12 @@ app.MapPost("/assembly/complete", async (HttpContext context, ShopFloorDbContext
 
     await dbContext.SaveChangesAsync();
     
+    // Broadcast part status changes for all assembled parts
+    foreach (var part in product.Parts)
+    {
+        await statusBroadcaster.BroadcastPartStatusAsync(part);
+    }
+    
     return Results.Redirect($"/assembly?success={productNumber}&parts={product.Parts.Count}");
 });
 
@@ -718,5 +746,8 @@ app.MapGet("/shipping", () => Results.Content(@"
 
 // Map SignalR hub
 app.MapHub<StatusHub>("/hubs/status");
+
+// Map API endpoints
+app.MapSummaryEndpoints();
 
 app.Run();
