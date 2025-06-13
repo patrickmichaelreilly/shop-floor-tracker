@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ShopFloorTracker.Core.Entities;
+using ShopFloorTracker.Core.Enums;
 
 namespace ShopFloorTracker.Infrastructure.Data;
 
@@ -27,6 +28,7 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.WorkOrderId).HasMaxLength(50);
             entity.Property(e => e.WorkOrderNumber).HasMaxLength(100).IsRequired();
             entity.Property(e => e.CustomerName).HasMaxLength(200);
+            entity.Property(e => e.Status).HasConversion<string>();
         });
 
         // Configure Product entity
@@ -38,7 +40,7 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.ProductNumber).HasMaxLength(100).IsRequired();
             entity.Property(e => e.ProductName).HasMaxLength(200);
             entity.Property(e => e.ProductType).HasMaxLength(50);
-            entity.Property(e => e.Status).HasMaxLength(20);
+            entity.Property(e => e.Status).HasConversion<string>();
 
             entity.HasOne(d => d.WorkOrder)
                   .WithMany(p => p.Products)
@@ -57,6 +59,7 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.Material).HasMaxLength(100);
             entity.Property(e => e.EdgeBanding).HasMaxLength(200);
             entity.Property(e => e.NestingSheet).HasMaxLength(100);
+            entity.Property(e => e.Status).HasConversion<string>();
 
             entity.HasOne(d => d.Product)
                   .WithMany(p => p.Parts)
@@ -76,7 +79,7 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.SubassemblyNumber).HasMaxLength(100).IsRequired();
             entity.Property(e => e.SubassemblyName).HasMaxLength(200);
             entity.Property(e => e.SubassemblyType).HasMaxLength(50);
-            entity.Property(e => e.Status).HasMaxLength(20);
+            entity.Property(e => e.Status).HasConversion<string>();
 
             entity.HasOne(d => d.Product)
                   .WithMany(p => p.Subassemblies)
@@ -91,7 +94,7 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.WorkOrderId).HasMaxLength(50).IsRequired();
             entity.Property(e => e.HardwareNumber).HasMaxLength(100).IsRequired();
             entity.Property(e => e.HardwareName).HasMaxLength(200);
-            entity.Property(e => e.Status).HasMaxLength(20);
+            entity.Property(e => e.Status).HasConversion<string>();
 
             entity.HasOne(d => d.WorkOrder)
                   .WithMany(p => p.Hardware)
@@ -106,7 +109,7 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.WorkOrderId).HasMaxLength(50).IsRequired();
             entity.Property(e => e.ProductNumber).HasMaxLength(100).IsRequired();
             entity.Property(e => e.ProductName).HasMaxLength(200);
-            entity.Property(e => e.Status).HasMaxLength(20);
+            entity.Property(e => e.Status).HasConversion<string>();
 
             entity.HasOne(d => d.WorkOrder)
                   .WithMany(p => p.DetachedProducts)

@@ -1,3 +1,5 @@
+using ShopFloorTracker.Core.Enums;
+
 namespace ShopFloorTracker.Core.Entities;
 
 public class Product
@@ -7,7 +9,7 @@ public class Product
     public string ProductNumber { get; set; } = string.Empty;
     public string? ProductName { get; set; }
     public string? ProductType { get; set; }
-    public string Status { get; set; } = "Pending";
+    public ProductStatus Status { get; set; } = ProductStatus.Pending;
     public DateTime? AssemblyDate { get; set; }
     public DateTime? ShippedDate { get; set; }
     public int TotalParts { get; set; }

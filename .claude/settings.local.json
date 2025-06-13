@@ -8,7 +8,14 @@
       "Bash(dotnet add reference:*)",
       "Bash(dotnet add package:*)",
       "Bash(dotnet build)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet remove:*)",
+      "Bash(timeout:*)",
+      "Bash(true)",
+      "Bash(dotnet nuget locals:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(dotnet restore)"
     ],
     "deny": []
   }
