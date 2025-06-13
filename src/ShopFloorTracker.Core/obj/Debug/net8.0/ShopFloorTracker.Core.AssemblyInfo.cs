@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ShopFloorTracker.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f38106f9c50a463dd9345a983823b9af33685b73")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e424540746d4d745650f8822ce9adcaf0a3882e6")]
 [assembly: System.Reflection.AssemblyProductAttribute("ShopFloorTracker.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ShopFloorTracker.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

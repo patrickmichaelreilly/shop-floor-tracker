@@ -23,7 +23,10 @@
       "Bash(ls:*)",
       "Bash(git push:*)",
       "Bash(rm:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git commit -m \"$(cat <<'EOF'\nPhase 2E: Critical Documentation Updates - Claude Code\n\n- Updated AGENT_HANDOFF_LOG.md with comprehensive Phase 2E completion details\n- Updated PROJECT_STATUS.md to reflect 95% completion with Phase 2E features\n- Corrected project status from Phase 2C to Phase 2E completion\n- Added detailed technical accomplishments and system capabilities\n- Marked previous phases as SUPERSEDED by current implementation\n- Documented all major features: smart sorting, assembly workflow, storage management\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(dotnet build:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

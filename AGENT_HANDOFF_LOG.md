@@ -9,6 +9,49 @@ When you complete work or hand off to another agent:
 
 ---
 
+## 2025-01-13 - Claude Code (Phase 2F-A: SignalR Bootstrap)
+**Work Completed:**
+- **SignalR Package Integration** - Added Microsoft.AspNetCore.SignalR with DI registration and hub endpoint mapping
+- **StatusHub Implementation** - Created hub with Heartbeat and PartStatusChanged server-to-client methods
+- **StatusBroadcaster Service** - Built injectable wrapper around IHubContext with heartbeat and part status broadcasting
+- **HeartbeatService Background Service** - Implemented hosted service for demo traffic every 15 seconds
+- **Client-Side JavaScript** - Added SignalR client script to _Layout.cshtml with console logging for events
+- **Unit Testing** - Created StatusBroadcasterTests with mocked IHubContext verification
+
+**Files Created/Modified:**
+- src/ShopFloorTracker.Web/Hubs/StatusHub.cs - New SignalR hub with broadcast methods
+- src/ShopFloorTracker.Infrastructure/Services/StatusBroadcaster.cs - New service with interface
+- src/ShopFloorTracker.Infrastructure/Services/HeartbeatService.cs - New background service for demo traffic
+- src/ShopFloorTracker.Web/Pages/Shared/_Layout.cshtml - New layout with SignalR client integration
+- src/ShopFloorTracker.Tests/Unit/StatusBroadcasterTests.cs - New unit test stub
+- src/ShopFloorTracker.Web/Program.cs - Updated with SignalR DI and endpoint mapping
+- PROJECT_STATUS.md - Updated with Phase 2F-A completion
+- AGENT_HANDOFF_LOG.md - This entry
+
+**Technical Implementation:**
+- SignalR hub endpoint: `/hubs/status`
+- Heartbeat broadcast every 15 seconds via HeartbeatService
+- StatusBroadcaster exposes SendHeartbeatAsync() and BroadcastPartStatusAsync(Part part)
+- Client script connects automatically and logs all incoming messages to console
+- Unit tests verify hub context method invocations with proper parameters
+
+**Next Agent Should:**
+- **PRIORITY 1:** Work on Phase 2F-B - Real-time Rack UI updates for Sorting & Assembly pages
+- Subscribe to StatusHub from existing sorting and assembly station pages
+- Trigger live tile/status refreshes when PartStatusChanged events received
+- Test multi-browser session real-time synchronization
+- Consider integrating StatusBroadcaster calls into existing part scanning workflows
+
+**Verification Steps:**
+- App builds with no warnings
+- Navigate to any station page to verify SignalR WebSocket connection in DevTools
+- Console should log heartbeat every ~15 seconds
+- Test StatusBroadcaster.BroadcastPartStatusAsync calls appear in console
+
+**Time Spent:** 1 hour
+
+---
+
 ## 2025-01-13 - Claude Code (Phase 2E: Advanced Station Features & Real-Time Updates)
 **Work Completed:**
 - **Phase 2E-A: Enhanced Sorting Station** - Implemented smart slot assignment algorithm with visual storage rack interface

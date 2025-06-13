@@ -1,11 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using ShopFloorTracker.Infrastructure.Data;
+using ShopFloorTracker.Web.Hubs;
+using ShopFloorTracker.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Entity Framework services with EF Core 9.0.0 (compatibility issue resolved)
 builder.Services.AddDbContext<ShopFloorDbContext>(options =>
     options.UseSqlite("Data Source=shopfloor.db"));
+
+// Add SignalR services
+builder.Services.AddSignalR();
+
+// Add custom services
+builder.Services.AddScoped<IStatusBroadcaster, StatusBroadcaster>();
+builder.Services.AddHostedService<HeartbeatService>();
 
 var app = builder.Build();
 
@@ -276,6 +285,37 @@ app.MapGet("/sorting", async (ShopFloorDbContext context) =>
 
     html += @"
     </div>
+    
+    <!-- SignalR Client -->
+    <script src=""https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.js""></script>
+    <script>
+        // Initialize SignalR connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl(""/hubs/status"")
+            .build();
+
+        // Start the connection
+        connection.start().then(function () {
+            console.log(""SignalR connected to StatusHub"");
+        }).catch(function (err) {
+            console.error(""SignalR connection error: "" + err.toString());
+        });
+
+        // Handle heartbeat messages
+        connection.on(""Heartbeat"", function (serverUtc) {
+            console.log(""Heartbeat received:"", serverUtc);
+        });
+
+        // Handle part status change messages
+        connection.on(""PartStatusChanged"", function (partId, newStatus) {
+            console.log(""Part status changed:"", partId, ""->"", newStatus);
+        });
+
+        // Handle connection errors
+        connection.onclose(function () {
+            console.log(""SignalR connection closed"");
+        });
+    </script>
 </body>
 </html>";
 
@@ -673,5 +713,8 @@ app.MapGet("/shipping", () => Results.Content(@"
     <p style='color: #7f8c8d; margin-top: 30px;'>Coming in Phase 2D...</p>
 </body>
 </html>", "text/html"));
+
+// Map SignalR hub
+app.MapHub<StatusHub>("/hubs/status");
 
 app.Run();
