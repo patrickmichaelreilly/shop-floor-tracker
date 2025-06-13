@@ -166,3 +166,4 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/obj/Debug/net8.0/ShopFloorTracker.Web.pdb
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/obj/Debug/net8.0/ShopFloorTracker.Web.genruntimeconfig.cache
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/obj/Debug/net8.0/ref/ShopFloorTracker.Web.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/bin/Debug/net8.0/runtimes/linux-musl-s390x/native/libe_sqlite3.so
