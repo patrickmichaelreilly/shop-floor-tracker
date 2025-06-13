@@ -1,0 +1,94 @@
+{
+  "version": 3,
+  "targets": {
+    "net8.0": {
+      "ShopFloorTracker.Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/ShopFloorTracker.Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/ShopFloorTracker.Core.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "ShopFloorTracker.Core/1.0.0": {
+      "type": "project",
+      "path": "../ShopFloorTracker.Core/ShopFloorTracker.Core.csproj",
+      "msbuildProject": "../ShopFloorTracker.Core/ShopFloorTracker.Core.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0": [
+      "ShopFloorTracker.Core >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "/home/patrick/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/ShopFloorTracker.Application.csproj",
+      "projectName": "ShopFloorTracker.Application",
+      "projectPath": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/ShopFloorTracker.Application.csproj",
+      "packagesPath": "/home/patrick/.nuget/packages/",
+      "outputPath": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/home/patrick/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "projectReferences": {
+            "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Core/ShopFloorTracker.Core.csproj": {
+              "projectPath": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Core/ShopFloorTracker.Core.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      }
+    },
+    "frameworks": {
+      "net8.0": {
+        "targetAlias": "net8.0",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.411/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

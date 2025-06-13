@@ -1,0 +1,16 @@
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/bin/Debug/net8.0/ShopFloorTracker.Application.deps.json
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/bin/Debug/net8.0/ShopFloorTracker.Application.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/bin/Debug/net8.0/ShopFloorTracker.Application.pdb
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/bin/Debug/net8.0/ShopFloorTracker.Core.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/bin/Debug/net8.0/ShopFloorTracker.Core.pdb
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.csproj.AssemblyReference.cache
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.GeneratedMSBuildEditorConfig.editorconfig
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.AssemblyInfoInputs.cache
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.AssemblyInfo.cs
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.csproj.CoreCompileInputs.cache
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.sourcelink.json
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloo.B6703323.Up2Date
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/refint/ShopFloorTracker.Application.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.pdb
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ref/ShopFloorTracker.Application.dll

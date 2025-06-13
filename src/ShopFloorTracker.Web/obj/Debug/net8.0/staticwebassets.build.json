@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "MKtV+5qTp7NXd8rs7YbPADgyxd8KAE4tldYmKl67TXw=",
+  "Source": "ShopFloorTracker.Web",
+  "BasePath": "_content/ShopFloorTracker.Web",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

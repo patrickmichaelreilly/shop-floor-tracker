@@ -1,0 +1,6 @@
+{
+  "ShopFloorTracker.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/patrick\/shop-floor-tracker\/src\/ShopFloorTracker.Application",
+  "ShopFloorTracker.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/patrick\/shop-floor-tracker\/src\/ShopFloorTracker.Core",
+  "ShopFloorTracker.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/patrick\/shop-floor-tracker\/src\/ShopFloorTracker.Infrastructure",
+  "ShopFloorTracker.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/patrick\/shop-floor-tracker\/src\/ShopFloorTracker.Web"
+}
