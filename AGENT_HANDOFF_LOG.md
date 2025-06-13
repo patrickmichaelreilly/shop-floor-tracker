@@ -9,6 +9,43 @@ When you complete work or hand off to another agent:
 
 ---
 
+## 2025-01-13 - Claude Code (Phase 2F-A-Fix: SignalR Client on Assembly Page)
+**Work Completed:**
+- **SignalR Client Integration** - Added SignalR client scripts to Assembly page HTML literal for complete coverage
+- **Shared Script Extraction** - Created SignalRClientScript const to avoid duplication between Sorting and Assembly pages
+- **Assembly Page Enhancement** - Assembly station now has same real-time capabilities as Sorting station
+- **Unit Test Coverage** - Added AssemblyPageTests.cs with placeholder tests for SignalR integration verification
+- **Documentation Updates** - Marked Phase 2F-A as FULLY COMPLETE in project status
+
+**Files Created/Modified:**
+- src/ShopFloorTracker.Web/Program.cs - Added shared SignalRClientScript const and integrated to both Sorting and Assembly pages
+- src/ShopFloorTracker.Tests/Unit/AssemblyPageTests.cs - New unit test file for Assembly page SignalR verification
+- PROJECT_STATUS.md - Updated to mark Phase 2F-A as fully complete
+- AGENT_HANDOFF_LOG.md - This entry
+
+**Technical Implementation:**
+- Both Sorting (/sorting) and Assembly (/assembly) pages now include identical SignalR client integration
+- Shared const SignalRClientScript eliminates code duplication
+- All station pages will log heartbeat messages every ~15 seconds to browser console
+- WebSocket connection to /hubs/status established on page load for both stations
+
+**Verification:**
+- Navigate to /assembly and check DevTools → Network → WS for hubs/status connection (Status 101)
+- Console should log "SignalR connected to StatusHub" and heartbeat messages every ~15 seconds
+- Sorting page functionality unchanged (no regression)
+- No duplicate script tags due to shared const approach
+
+**Next Agent Should:**
+- **PRIORITY 1:** Start Phase 2F-B - Real-time Rack UI updates
+- Subscribe to StatusHub events from Sorting & Assembly pages for live tile refreshes
+- Integrate StatusBroadcaster.BroadcastPartStatusAsync() calls into existing part scanning workflows
+- Test multi-browser session real-time synchronization
+- Consider adding visual indicators for real-time status changes in the UI
+
+**Time Spent:** 30 minutes
+
+---
+
 ## 2025-01-13 - Claude Code (Phase 2F-A: SignalR Bootstrap)
 **Work Completed:**
 - **SignalR Package Integration** - Added Microsoft.AspNetCore.SignalR with DI registration and hub endpoint mapping

@@ -18,6 +18,39 @@ builder.Services.AddHostedService<HeartbeatService>();
 
 var app = builder.Build();
 
+// Shared SignalR client scripts for all station pages
+const string SignalRClientScript = @"
+    <!-- SignalR Client -->
+    <script src=""https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.js""></script>
+    <script>
+        // Initialize SignalR connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl(""/hubs/status"")
+            .build();
+
+        // Start the connection
+        connection.start().then(function () {
+            console.log(""SignalR connected to StatusHub"");
+        }).catch(function (err) {
+            console.error(""SignalR connection error: "" + err.toString());
+        });
+
+        // Handle heartbeat messages
+        connection.on(""Heartbeat"", function (serverUtc) {
+            console.log(""Heartbeat received:"", serverUtc);
+        });
+
+        // Handle part status change messages
+        connection.on(""PartStatusChanged"", function (partId, newStatus) {
+            console.log(""Part status changed:"", partId, ""->"", newStatus);
+        });
+
+        // Handle connection errors
+        connection.onclose(function () {
+            console.log(""SignalR connection closed"");
+        });
+    </script>";
+
 // Initialize database with seeded data
 using (var scope = app.Services.CreateScope())
 {
@@ -284,38 +317,7 @@ app.MapGet("/sorting", async (ShopFloorDbContext context) =>
     }
 
     html += @"
-    </div>
-    
-    <!-- SignalR Client -->
-    <script src=""https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.js""></script>
-    <script>
-        // Initialize SignalR connection
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl(""/hubs/status"")
-            .build();
-
-        // Start the connection
-        connection.start().then(function () {
-            console.log(""SignalR connected to StatusHub"");
-        }).catch(function (err) {
-            console.error(""SignalR connection error: "" + err.toString());
-        });
-
-        // Handle heartbeat messages
-        connection.on(""Heartbeat"", function (serverUtc) {
-            console.log(""Heartbeat received:"", serverUtc);
-        });
-
-        // Handle part status change messages
-        connection.on(""PartStatusChanged"", function (partId, newStatus) {
-            console.log(""Part status changed:"", partId, ""->"", newStatus);
-        });
-
-        // Handle connection errors
-        connection.onclose(function () {
-            console.log(""SignalR connection closed"");
-        });
-    </script>
+    </div>" + SignalRClientScript + @"
 </body>
 </html>";
 
@@ -629,7 +631,7 @@ app.MapGet("/assembly", async (ShopFloorDbContext context) =>
     }
 
     html += @"
-    </div>
+    </div>" + SignalRClientScript + @"
 </body>
 </html>";
 
