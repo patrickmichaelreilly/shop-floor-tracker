@@ -16,6 +16,8 @@ public class ShopFloorDbContext : DbContext
     public DbSet<Part> Parts { get; set; }
     public DbSet<Hardware> Hardware { get; set; }
     public DbSet<DetachedProduct> DetachedProducts { get; set; }
+    public DbSet<StorageRack> StorageRacks { get; set; }
+    public DbSet<ScanActivity> ScanActivities { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +70,10 @@ public class ShopFloorDbContext : DbContext
             entity.HasOne(d => d.Subassembly)
                   .WithMany(p => p.Parts)
                   .HasForeignKey(d => d.SubassemblyId);
+
+            entity.HasOne(d => d.StorageRack)
+                  .WithMany(p => p.Parts)
+                  .HasForeignKey(d => d.StorageRackId);
         });
 
         // Configure Subassembly entity
@@ -114,6 +120,33 @@ public class ShopFloorDbContext : DbContext
             entity.HasOne(d => d.WorkOrder)
                   .WithMany(p => p.DetachedProducts)
                   .HasForeignKey(d => d.WorkOrderId);
+        });
+
+        // Configure StorageRack entity
+        modelBuilder.Entity<StorageRack>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Rows).IsRequired();
+            entity.Property(e => e.Columns).IsRequired();
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
+        // Configure ScanActivity entity
+        modelBuilder.Entity<ScanActivity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PartId).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.StationName).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Activity).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.OldStatus).HasConversion<string>();
+            entity.Property(e => e.NewStatus).HasConversion<string>();
+            entity.Property(e => e.StorageLocation).HasMaxLength(50);
+            entity.Property(e => e.OperatorId).HasMaxLength(50);
+
+            entity.HasOne(d => d.Part)
+                  .WithMany(p => p.ScanActivities)
+                  .HasForeignKey(d => d.PartId);
         });
     }
 }

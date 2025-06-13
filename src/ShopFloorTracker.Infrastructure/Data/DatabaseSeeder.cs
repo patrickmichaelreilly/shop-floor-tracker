@@ -153,6 +153,34 @@ public static class DatabaseSeeder
         context.Parts.AddRange(parts1);
         context.Parts.AddRange(parts2);
 
+        // Create storage racks
+        var storageRacks = new[]
+        {
+            new StorageRack
+            {
+                Name = "Rack A",
+                Rows = 4,
+                Columns = 6,
+                IsActive = true
+            },
+            new StorageRack
+            {
+                Name = "Rack B", 
+                Rows = 4,
+                Columns = 6,
+                IsActive = true
+            },
+            new StorageRack
+            {
+                Name = "Rack C",
+                Rows = 3,
+                Columns = 8,
+                IsActive = true
+            }
+        };
+
+        context.StorageRacks.AddRange(storageRacks);
+
         await context.SaveChangesAsync();
     }
 }
