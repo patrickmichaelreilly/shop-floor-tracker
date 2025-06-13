@@ -20,7 +20,44 @@ git commit -m "Phase X: [Description] - [Agent Name]
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
-4. **Verify the commit** using: `git log --oneline -1`
+4. **CRITICAL: Push to GitHub immediately:**
+```
+git push origin master
+```
+
+5. **Verify the commit** using: `git log --oneline -1`
+
+## Complete Git Workflow for All Agents
+
+### Every commit must follow this COMPLETE process:
+
+1. **Stage changes:**
+   ```bash
+   git add .
+   # or git add specific-files
+   ```
+
+2. **Commit with proper format:**
+   ```bash
+   git commit -m "Phase X: Description - Claude Code"
+   ```
+
+3. **CRITICAL: Push to GitHub immediately:**
+   ```bash
+   git push origin master
+   ```
+
+### Why All Three Steps Are Required:
+- **Local commits are invisible** to other agents and tools until pushed
+- **GitHub is the source of truth** for the project state
+- **URL grabbing tools** read from GitHub, not local repository
+- **Collaboration requires** changes to be on the remote repository
+
+### Verification:
+After pushing, verify your changes are visible on GitHub by:
+- Checking the repository web interface
+- Confirming the commit appears in the GitHub history
+- Testing that any file changes are accessible via raw GitHub URLs
 
 ### Example:
 ```
