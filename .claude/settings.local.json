@@ -16,7 +16,8 @@
       "Bash(dotnet nuget locals:*)",
       "Bash(dotnet clean:*)",
       "Bash(dotnet restore)",
-      "Bash(ASPNETCORE_URLS=\"http://localhost:5050\" timeout 5s dotnet run --project ShopFloorTracker.Web)"
+      "Bash(ASPNETCORE_URLS=\"http://localhost:5050\" timeout 5s dotnet run --project ShopFloorTracker.Web)",
+      "Bash(ASPNETCORE_URLS=\"http://localhost:5000\" timeout 5s dotnet run --project ShopFloorTracker.Web)"
     ],
     "deny": []
   }
