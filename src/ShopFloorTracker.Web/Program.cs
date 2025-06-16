@@ -991,6 +991,368 @@ app.MapPost("/assembly/complete", async (HttpContext context, ShopFloorDbContext
     return Results.Redirect($"/assembly?success={productNumber}&parts={product.Parts.Count}");
 });
 
+app.MapGet("/admin", async (HttpContext context, ShopFloorDbContext dbContext) =>
+{
+    // Live database queries for system statistics
+    var totalWorkOrders = await dbContext.WorkOrders.CountAsync();
+    var activeWorkOrders = await dbContext.WorkOrders.CountAsync(w => w.Status == WorkOrderStatus.Active);
+    var completedWorkOrders = await dbContext.WorkOrders.CountAsync(w => w.Status == WorkOrderStatus.Complete);
+    var shippedWorkOrders = await dbContext.WorkOrders.CountAsync(w => w.Status == WorkOrderStatus.Shipped);
+    
+    var totalParts = await dbContext.Parts.CountAsync();
+    var pendingParts = await dbContext.Parts.CountAsync(p => p.Status == ShopFloorTracker.Core.Enums.PartStatus.Pending);
+    var sortedParts = await dbContext.Parts.CountAsync(p => p.Status == ShopFloorTracker.Core.Enums.PartStatus.Sorted);
+    var assembledParts = await dbContext.Parts.CountAsync(p => p.Status == ShopFloorTracker.Core.Enums.PartStatus.Assembled);
+    var shippedParts = await dbContext.Parts.CountAsync(p => p.Status == ShopFloorTracker.Core.Enums.PartStatus.Shipped);
+    
+    var totalProducts = await dbContext.Products.CountAsync();
+    var inProgressProducts = await dbContext.Products.CountAsync(p => p.Status == ShopFloorTracker.Core.Enums.ProductStatus.InProgress);
+    var completeProducts = await dbContext.Products.CountAsync(p => p.Status == ShopFloorTracker.Core.Enums.ProductStatus.Complete);
+    
+    var totalStorageRacks = await dbContext.StorageRacks.CountAsync(r => r.IsActive);
+    var totalSlots = await dbContext.StorageRacks.Where(r => r.IsActive).SumAsync(r => r.Rows * r.Columns);
+    var occupiedSlots = await dbContext.Parts.CountAsync(p => p.Status == ShopFloorTracker.Core.Enums.PartStatus.Sorted && p.StorageRackId != null);
+    var storageUtilization = totalSlots > 0 ? (occupiedSlots * 100 / totalSlots) : 0;
+    
+    // Get recent work orders for management
+    var recentWorkOrders = await dbContext.WorkOrders
+        .OrderByDescending(w => w.CreatedDate)
+        .Take(10)
+        .Select(w => new { w.WorkOrderId, w.WorkOrderNumber, w.CustomerName, w.Status, w.TotalProducts, w.TotalParts, w.CreatedDate, w.DueDate })
+        .ToListAsync();
+    
+    // Get query parameters for feedback messages
+    var query = context.Request.Query;
+    var successMessage = "";
+    var errorMessage = "";
+    
+    if (query.ContainsKey("imported"))
+    {
+        successMessage = $"Successfully imported {query["imported"]} work orders with {(query.ContainsKey("parts") ? query["parts"].ToString() : "0")} parts.";
+    }
+    else if (query.ContainsKey("created"))
+    {
+        successMessage = $"Work order {query["created"]} created successfully.";
+    }
+    else if (query.ContainsKey("deleted"))
+    {
+        successMessage = "Work order deleted successfully.";
+    }
+    
+    if (query.ContainsKey("error"))
+    {
+        var error = query["error"].ToString();
+        errorMessage = error switch
+        {
+            "upload" => "Error uploading file. Please try again.",
+            "format" => "Invalid file format. Please use a valid CSV file with required headers.",
+            "required" => "Work order number and customer name are required.",
+            "duplicate" => "Work order number already exists.",
+            _ => "An error occurred. Please try again."
+        };
+    }
+
+    var html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>Admin Station - Shop Floor Tracker</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }}
+        .header {{ background-color: #e74c3c; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; }}
+        .nav {{ margin-bottom: 20px; }}
+        .nav a {{ color: #3498db; text-decoration: none; font-size: 16px; }}
+        
+        .stats-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }}
+        .stat-card {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }}
+        .stat-number {{ font-size: 2em; font-weight: bold; margin-bottom: 5px; }}
+        .stat-label {{ color: #7f8c8d; font-size: 0.9em; }}
+        .stat-work-orders {{ color: #3498db; }}
+        .stat-parts {{ color: #27ae60; }}
+        .stat-products {{ color: #f39c12; }}
+        .stat-storage {{ color: #9b59b6; }}
+        
+        .content-grid {{ display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }}
+        .work-order-management {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+        .system-config {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+        
+        .work-order-list {{ max-height: 400px; overflow-y: auto; }}
+        .work-order-item {{ border: 1px solid #ecf0f1; padding: 15px; margin-bottom: 10px; border-radius: 4px; }}
+        .work-order-header {{ font-weight: bold; color: #2c3e50; margin-bottom: 5px; }}
+        .work-order-details {{ color: #7f8c8d; font-size: 0.9em; margin-bottom: 10px; }}
+        .work-order-actions {{ display: flex; gap: 10px; }}
+        
+        .status-active {{ border-left: 4px solid #27ae60; }}
+        .status-complete {{ border-left: 4px solid #3498db; }}
+        .status-shipped {{ border-left: 4px solid #95a5a6; }}
+        
+        .form-group {{ margin-bottom: 15px; }}
+        .form-label {{ display: block; margin-bottom: 5px; font-weight: bold; color: #2c3e50; }}
+        .form-input {{ width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }}
+        .form-button {{ background-color: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }}
+        .form-button:hover {{ background-color: #2980b9; }}
+        .danger-button {{ background-color: #e74c3c; }}
+        .danger-button:hover {{ background-color: #c0392b; }}
+        
+        .message {{ padding: 15px; border-radius: 4px; margin-bottom: 20px; }}
+        .success-message {{ background-color: #d5f4e6; border: 1px solid #27ae60; color: #1e7e34; }}
+        .error-message {{ background-color: #f8d7da; border: 1px solid #e74c3c; color: #721c24; }}
+        
+        .config-item {{ margin-bottom: 15px; padding: 15px; border: 1px solid #ecf0f1; border-radius: 4px; }}
+        .config-label {{ font-weight: bold; color: #2c3e50; margin-bottom: 5px; }}
+        .config-value {{ color: #7f8c8d; }}
+        
+        .search-box {{ width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }}
+        
+        .tab-container {{ margin-bottom: 20px; }}
+        .tab-buttons {{ display: flex; gap: 0; margin-bottom: 20px; }}
+        .tab-button {{ padding: 10px 20px; border: 1px solid #ddd; background: #f8f9fa; cursor: pointer; }}
+        .tab-button.active {{ background: #3498db; color: white; border-color: #3498db; }}
+        .tab-content {{ display: none; }}
+        .tab-content.active {{ display: block; }}
+    </style>
+</head>
+<body>
+    <div class='header'>
+        <h1>Admin Station</h1>
+        <p>System management and work order administration</p>
+    </div>
+    
+    <div class='nav'>
+        <a href='/'>&larr; Back to Dashboard</a>
+    </div>";
+
+    if (!string.IsNullOrEmpty(successMessage))
+    {
+        html += $@"<div class='message success-message'>{successMessage}</div>";
+    }
+    
+    if (!string.IsNullOrEmpty(errorMessage))
+    {
+        html += $@"<div class='message error-message'>{errorMessage}</div>";
+    }
+
+    html += $@"
+    <div class='stats-grid'>
+        <div class='stat-card'>
+            <div class='stat-number stat-work-orders'>{totalWorkOrders}</div>
+            <div class='stat-label'>Total Work Orders</div>
+            <div style='font-size: 0.8em; margin-top: 5px; color: #95a5a6;'>
+                Active: {activeWorkOrders} | Complete: {completedWorkOrders} | Shipped: {shippedWorkOrders}
+            </div>
+        </div>
+        
+        <div class='stat-card'>
+            <div class='stat-number stat-parts'>{totalParts}</div>
+            <div class='stat-label'>Total Parts</div>
+            <div style='font-size: 0.8em; margin-top: 5px; color: #95a5a6;'>
+                Pending: {pendingParts} | Sorted: {sortedParts} | Assembled: {assembledParts}
+            </div>
+        </div>
+        
+        <div class='stat-card'>
+            <div class='stat-number stat-products'>{totalProducts}</div>
+            <div class='stat-label'>Total Products</div>
+            <div style='font-size: 0.8em; margin-top: 5px; color: #95a5a6;'>
+                In Progress: {inProgressProducts} | Complete: {completeProducts}
+            </div>
+        </div>
+        
+        <div class='stat-card'>
+            <div class='stat-number stat-storage'>{storageUtilization}%</div>
+            <div class='stat-label'>Storage Utilization</div>
+            <div style='font-size: 0.8em; margin-top: 5px; color: #95a5a6;'>
+                {occupiedSlots}/{totalSlots} slots ({totalStorageRacks} racks)
+            </div>
+        </div>
+    </div>
+    
+    <div class='content-grid'>
+        <div class='work-order-management'>
+            <div class='tab-container'>
+                <div class='tab-buttons'>
+                    <div class='tab-button active' onclick='showTab(""manage"")'>Manage Work Orders</div>
+                    <div class='tab-button' onclick='showTab(""create"")'>Create New</div>
+                    <div class='tab-button' onclick='showTab(""import"")'>Import CSV</div>
+                </div>
+                
+                <div id='tab-manage' class='tab-content active'>
+                    <h3>Work Order Management</h3>
+                    <input type='text' class='search-box' placeholder='Search by work order number or customer name...' onkeyup='filterWorkOrders(this.value)'>
+                    
+                    <div class='work-order-list' id='workOrderList'>";
+
+    foreach (var order in recentWorkOrders)
+    {
+        var statusClass = order.Status switch
+        {
+            WorkOrderStatus.Active => "status-active",
+            WorkOrderStatus.Complete => "status-complete",
+            WorkOrderStatus.Shipped => "status-shipped",
+            _ => ""
+        };
+        
+        var dueDateDisplay = order.DueDate?.ToString("yyyy-MM-dd") ?? "No due date";
+        var createdDisplay = order.CreatedDate.ToString("yyyy-MM-dd HH:mm");
+
+        html += $@"
+                        <div class='work-order-item {statusClass}' data-search='{order.WorkOrderNumber.ToLower()} {order.CustomerName?.ToLower()}'>
+                            <div class='work-order-header'>{order.WorkOrderNumber} - {order.CustomerName}</div>
+                            <div class='work-order-details'>
+                                Status: {order.Status} | Products: {order.TotalProducts} | Parts: {order.TotalParts}<br>
+                                Created: {createdDisplay} | Due: {dueDateDisplay}
+                            </div>
+                            <div class='work-order-actions'>
+                                <button class='form-button' onclick='editWorkOrder(""{order.WorkOrderId}"", ""{order.WorkOrderNumber}"", ""{order.CustomerName}"")'>Edit</button>
+                                <button class='form-button danger-button' onclick='deleteWorkOrder(""{order.WorkOrderId}"", ""{order.WorkOrderNumber}"")'>Delete</button>
+                            </div>
+                        </div>";
+    }
+
+    html += $@"
+                    </div>
+                </div>
+                
+                <div id='tab-create' class='tab-content'>
+                    <h3>Create New Work Order</h3>
+                    <form method='post' action='/admin/add-work-order'>
+                        <div class='form-group'>
+                            <label class='form-label'>Work Order Number</label>
+                            <input type='text' name='workOrderNumber' class='form-input' required placeholder='WO-001'>
+                        </div>
+                        <div class='form-group'>
+                            <label class='form-label'>Customer Name</label>
+                            <input type='text' name='customerName' class='form-input' required placeholder='Customer Name'>
+                        </div>
+                        <div class='form-group'>
+                            <label class='form-label'>Due Date (Optional)</label>
+                            <input type='date' name='dueDate' class='form-input'>
+                        </div>
+                        <button type='submit' class='form-button'>Create Work Order</button>
+                    </form>
+                </div>
+                
+                <div id='tab-import' class='tab-content'>
+                    <h3>Import Work Orders from CSV</h3>
+                    <p style='color: #7f8c8d; margin-bottom: 15px;'>
+                        Upload a CSV file with columns: WorkOrderNumber, ProductName, PartNumber, PartDescription, Quantity, DueDate
+                    </p>
+                    <form method='post' action='/admin/import-csv' enctype='multipart/form-data'>
+                        <div class='form-group'>
+                            <label class='form-label'>CSV File</label>
+                            <input type='file' name='csvFile' class='form-input' accept='.csv' required>
+                        </div>
+                        <button type='submit' class='form-button'>Import CSV</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class='system-config'>
+            <h3>System Configuration</h3>
+            
+            <div class='config-item'>
+                <div class='config-label'>Database Status</div>
+                <div class='config-value'>✅ Connected and operational</div>
+            </div>
+            
+            <div class='config-item'>
+                <div class='config-label'>Last Update</div>
+                <div class='config-value'>{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC</div>
+            </div>
+            
+            <div class='config-item'>
+                <div class='config-label'>Storage Racks</div>
+                <div class='config-value'>{totalStorageRacks} active racks configured</div>
+            </div>
+            
+            <div class='config-item'>
+                <div class='config-label'>System Health</div>
+                <div class='config-value'>
+                    📊 Database: OK<br>
+                    🔄 SignalR: Active<br>
+                    💾 Storage: {storageUtilization}% utilized
+                </div>
+            </div>
+            
+            <h4 style='margin-top: 25px; margin-bottom: 15px;'>System Actions</h4>
+            
+            <div style='margin-bottom: 10px;'>
+                <button class='form-button' onclick='refreshStats()'>Refresh Statistics</button>
+            </div>
+            
+            <div style='margin-bottom: 10px;'>
+                <button class='form-button danger-button' onclick='clearCompletedOrders()'>Clear Completed Orders</button>
+            </div>
+        </div>
+    </div>" + SignalRClientScript + @"
+    
+    <script>
+        function showTab(tabName) {{
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }}
+        
+        function filterWorkOrders(searchTerm) {{
+            const items = document.querySelectorAll('.work-order-item');
+            items.forEach(item => {{
+                const searchData = item.getAttribute('data-search');
+                if (searchData.includes(searchTerm.toLowerCase())) {{
+                    item.style.display = 'block';
+                }} else {{
+                    item.style.display = 'none';
+                }}
+            }});
+        }}
+        
+        function editWorkOrder(workOrderId, workOrderNumber, customerName) {{
+            const newCustomerName = prompt('Edit customer name for ' + workOrderNumber + ':', customerName);
+            if (newCustomerName && newCustomerName !== customerName) {{
+                // For now, just show an alert. In a full implementation, this would make an API call
+                alert('Edit functionality will be implemented in the next phase.');
+            }}
+        }}
+        
+        function deleteWorkOrder(workOrderId, workOrderNumber) {{
+            if (confirm('Are you sure you want to delete work order ' + workOrderNumber + '? This will also delete all associated products and parts.')) {{
+                fetch('/admin/work-order/' + workOrderId + '/delete', {{
+                    method: 'DELETE'
+                }})
+                .then(response => {{
+                    if (response.ok) {{
+                        location.href = '/admin?deleted=true';
+                    }} else {{
+                        alert('Error deleting work order. Please try again.');
+                    }}
+                }})
+                .catch(error => {{
+                    alert('Error deleting work order. Please try again.');
+                }});
+            }}
+        }}
+        
+        function refreshStats() {{
+            location.reload();
+        }}
+        
+        function clearCompletedOrders() {{
+            if (confirm('Are you sure you want to clear all completed and shipped work orders? This action cannot be undone.')) {{
+                alert('Clear completed orders functionality will be implemented in the next phase.');
+            }}
+        }}
+    </script>
+</body>
+</html>";
+
+    return Results.Content(html, "text/html");
+});
+
 app.MapGet("/shipping", () => Results.Content(@"
 <!DOCTYPE html>
 <html>
