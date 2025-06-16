@@ -1323,30 +1323,6 @@ app.MapGet("/admin", async (HttpContext context, ShopFloorDbContext dbContext) =
                 <button class='form-button danger-button' onclick='clearCompletedOrders()'>Clear Completed Orders</button>
             </div>
         </div>
-    </div>
-    
-    <div class='work-order-management' style='grid-column: 1 / -1; margin-top: 20px;'>
-        <h3>Microvellum Import</h3>
-        <div class='row' style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px;'>
-            <div>
-                <label for='sdfFile' class='form-label' style='display: block; margin-bottom: 5px; font-weight: bold; color: #2c3e50;'>Upload SDF File</label>
-                <input type='file' id='sdfFile' class='form-input' style='margin-bottom: 10px;' accept='.sdf' />
-                <button id='uploadImportBtn' class='form-button' onclick='uploadAndImport()'>Upload & Import</button>
-                <div id='uploadProgress' style='margin-top: 10px; display: none;'>
-                    <div style='background-color: #ecf0f1; border-radius: 4px; overflow: hidden;'>
-                        <div id='progressBar' style='height: 20px; background-color: #3498db; width: 0%; transition: width 0.3s;'></div>
-                    </div>
-                    <div id='progressText' style='text-align: center; margin-top: 5px; font-size: 0.9em; color: #7f8c8d;'>Preparing upload...</div>
-                </div>
-            </div>
-            <div>
-                <h6 style='margin-bottom: 10px; font-weight: bold; color: #2c3e50;'>Import History</h6>
-                <div id='importHistory' class='border p-2' style='height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f8f9fa;'>
-                    Loading...
-                </div>
-            </div>
-        </div>
-        <div id='importStatus' class='mt-3' style='margin-top: 15px;'></div>
     </div>" + SignalRClientScript + @"
     
     <script>
@@ -1357,7 +1333,13 @@ app.MapGet("/admin", async (HttpContext context, ShopFloorDbContext dbContext) =
             
             // Show selected tab
             document.getElementById('tab-' + tabName).classList.add('active');
-            event.target.classList.add('active');
+            
+            // Activate the clicked button
+            document.querySelectorAll('.tab-button').forEach(btn => {{
+                if (btn.onclick && btn.onclick.toString().includes(tabName)) {{
+                    btn.classList.add('active');
+                }}
+            }});
         }}
         
         function filterWorkOrders(searchTerm) {{
