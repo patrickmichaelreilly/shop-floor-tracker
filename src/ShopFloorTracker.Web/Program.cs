@@ -3,6 +3,9 @@ using ShopFloorTracker.Infrastructure.Data;
 using ShopFloorTracker.Web.Hubs;
 using ShopFloorTracker.Web.Services;
 using ShopFloorTracker.Web.Endpoints;
+using ShopFloorTracker.Core.Enums;
+using ShopFloorTracker.Core.Entities;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,44 @@ builder.Services.AddScoped<IStatusBroadcaster, StatusBroadcaster>();
 builder.Services.AddHostedService<HeartbeatService>();
 
 var app = builder.Build();
+
+// Add global exception handling middleware
+app.UseExceptionHandler(appError =>
+{
+    appError.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "text/html";
+        
+        var exceptionHandlerFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        if (exceptionHandlerFeature != null)
+        {
+            var html = @"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Error - Shop Floor Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+        .error-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .error-header { color: #e74c3c; font-size: 1.5em; margin-bottom: 20px; }
+        .error-message { color: #666; margin-bottom: 20px; }
+        .back-link { color: #3498db; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class='error-container'>
+        <div class='error-header'>Something went wrong</div>
+        <div class='error-message'>We're sorry, but an error occurred while processing your request. Please try again or contact support if the problem persists.</div>
+        <a href='/' class='back-link'>&larr; Back to Dashboard</a>
+    </div>
+</body>
+</html>";
+            
+            await context.Response.WriteAsync(html);
+        }
+    });
+});
 
 // Shared SignalR client scripts for all station pages
 const string SignalRClientScript = @"
@@ -148,21 +189,242 @@ app.MapGet("/", async (ShopFloorDbContext context) =>
     return Results.Content(html, "text/html");
 });
 
-// Station placeholder endpoints
-app.MapGet("/admin", () => Results.Content(@"
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset='UTF-8'>
-    <title>Admin Station</title>
-</head>
-<body style='font-family: Arial, sans-serif; margin: 40px;'>
-    <h1>Admin Station</h1>
-    <p>Work order import and system administration</p>
-    <a href='/' style='color: #3498db;'>&larr; Back to Dashboard</a>
-    <p style='color: #7f8c8d; margin-top: 30px;'>Coming in Phase 2D...</p>
-</body>
-</html>", "text/html"));
+// CSV Import endpoint
+app.MapPost("/admin/import-csv", async (HttpContext context, ShopFloorDbContext dbContext) =>
+{
+    try
+    {
+        var form = await context.Request.ReadFormAsync();
+        var file = form.Files["csvFile"];
+        
+        if (file == null || file.Length == 0)
+        {
+            return Results.Redirect("/admin?error=upload");
+        }
+
+        if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.Redirect("/admin?error=format");
+        }
+
+        var importedWorkOrders = 0;
+        var importedParts = 0;
+        
+        using var reader = new StreamReader(file.OpenReadStream());
+        var csvData = await reader.ReadToEndAsync();
+        var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        
+        if (lines.Length < 2)
+        {
+            return Results.Redirect("/admin?error=format");
+        }
+
+        // Parse header
+        var headers = lines[0].Split(',').Select(h => h.Trim().Trim('"')).ToArray();
+        var expectedHeaders = new[] { "WorkOrderNumber", "ProductName", "PartNumber", "PartDescription", "Quantity", "DueDate" };
+        
+        if (!expectedHeaders.All(eh => headers.Contains(eh, StringComparer.OrdinalIgnoreCase)))
+        {
+            return Results.Redirect("/admin?error=format");
+        }
+
+        var workOrdersToImport = new Dictionary<string, (WorkOrder workOrder, List<(Product product, List<ShopFloorTracker.Core.Entities.Part> parts)> products)>();
+
+        // Parse data lines
+        for (int i = 1; i < lines.Length; i++)
+        {
+            var values = ParseCsvLine(lines[i]);
+            if (values.Length < 6) continue;
+
+            var workOrderNumber = values[0].Trim().Trim('"');
+            var productName = values[1].Trim().Trim('"');
+            var partNumber = values[2].Trim().Trim('"');
+            var partDescription = values[3].Trim().Trim('"');
+            var quantity = int.TryParse(values[4].Trim().Trim('"'), out var qty) ? qty : 1;
+            var dueDate = DateTime.TryParse(values[5].Trim().Trim('"'), out var due) ? due : (DateTime?)null;
+
+            if (string.IsNullOrEmpty(workOrderNumber) || string.IsNullOrEmpty(partNumber)) continue;
+
+            // Create or get work order
+            if (!workOrdersToImport.ContainsKey(workOrderNumber))
+            {
+                var workOrder = new ShopFloorTracker.Core.Entities.WorkOrder
+                {
+                    WorkOrderId = Guid.NewGuid().ToString(),
+                    WorkOrderNumber = workOrderNumber,
+                    CustomerName = "Imported Customer",
+                    DueDate = dueDate,
+                    Status = WorkOrderStatus.Active,
+                    ImportedDate = DateTime.UtcNow,
+                    ImportedBy = "Admin"
+                };
+                workOrdersToImport[workOrderNumber] = (workOrder, new List<(Product, List<ShopFloorTracker.Core.Entities.Part>)>());
+            }
+
+            var workOrderData = workOrdersToImport[workOrderNumber];
+            
+            // Find or create product
+            var product = workOrderData.products.FirstOrDefault(p => p.product.ProductName == productName).product;
+            if (product == null)
+            {
+                product = new ShopFloorTracker.Core.Entities.Product
+                {
+                    ProductId = Guid.NewGuid().ToString(),
+                    WorkOrderId = workOrderData.workOrder.WorkOrderId,
+                    ProductNumber = $"{workOrderNumber}-{productName.Split(' ')[0]}",
+                    ProductName = productName,
+                    Status = ProductStatus.InProgress
+                };
+                workOrderData.products.Add((product, new List<ShopFloorTracker.Core.Entities.Part>()));
+            }
+
+            var productData = workOrderData.products.First(p => p.product.ProductId == product.ProductId);
+
+            // Create parts based on quantity
+            for (int q = 0; q < quantity; q++)
+            {
+                var part = new ShopFloorTracker.Core.Entities.Part
+                {
+                    PartId = Guid.NewGuid().ToString(),
+                    ProductId = product.ProductId,
+                    PartNumber = quantity > 1 ? $"{partNumber}-{q + 1}" : partNumber,
+                    PartName = partDescription,
+                    Status = PartStatus.Pending,
+                    Material = "Imported Material"
+                };
+                productData.parts.Add(part);
+                importedParts++;
+            }
+        }
+
+        // Save to database
+        foreach (var (workOrderNumber, (workOrder, products)) in workOrdersToImport)
+        {
+            // Check for duplicate work order numbers
+            if (await dbContext.WorkOrders.AnyAsync(w => w.WorkOrderNumber == workOrder.WorkOrderNumber))
+            {
+                continue; // Skip duplicates
+            }
+
+            workOrder.TotalProducts = products.Count;
+            workOrder.TotalParts = products.Sum(p => p.parts.Count);
+            
+            dbContext.WorkOrders.Add(workOrder);
+            
+            foreach (var (product, parts) in products)
+            {
+                dbContext.Products.Add(product);
+                foreach (var part in parts)
+                {
+                    dbContext.Parts.Add(part);
+                }
+            }
+            
+            importedWorkOrders++;
+        }
+
+        await dbContext.SaveChangesAsync();
+        
+        return Results.Redirect($"/admin?imported={importedWorkOrders}&parts={importedParts}");
+    }
+    catch (Exception)
+    {
+        return Results.Redirect("/admin?error=upload");
+    }
+});
+
+// Helper function to parse CSV line properly handling quoted values
+static string[] ParseCsvLine(string line)
+{
+    var result = new List<string>();
+    var current = new StringBuilder();
+    var inQuotes = false;
+    
+    for (int i = 0; i < line.Length; i++)
+    {
+        var c = line[i];
+        if (c == '"')
+        {
+            inQuotes = !inQuotes;
+        }
+        else if (c == ',' && !inQuotes)
+        {
+            result.Add(current.ToString());
+            current.Clear();
+        }
+        else
+        {
+            current.Append(c);
+        }
+    }
+    result.Add(current.ToString());
+    
+    return result.ToArray();
+}
+
+// Add new work order endpoint
+app.MapPost("/admin/add-work-order", async (HttpContext context, ShopFloorDbContext dbContext) =>
+{
+    var form = await context.Request.ReadFormAsync();
+    var workOrderNumber = form["workOrderNumber"].ToString().Trim();
+    var customerName = form["customerName"].ToString().Trim();
+    var dueDateStr = form["dueDate"].ToString().Trim();
+    
+    if (string.IsNullOrEmpty(workOrderNumber) || string.IsNullOrEmpty(customerName))
+    {
+        return Results.Redirect("/admin?error=required");
+    }
+
+    // Check for duplicate work order number
+    if (await dbContext.WorkOrders.AnyAsync(w => w.WorkOrderNumber == workOrderNumber))
+    {
+        return Results.Redirect("/admin?error=duplicate");
+    }
+
+    var dueDate = DateTime.TryParse(dueDateStr, out var due) ? due : (DateTime?)null;
+
+    var workOrder = new ShopFloorTracker.Core.Entities.WorkOrder
+    {
+        WorkOrderId = Guid.NewGuid().ToString(),
+        WorkOrderNumber = workOrderNumber,
+        CustomerName = customerName,
+        DueDate = dueDate,
+        Status = WorkOrderStatus.Active,
+        TotalProducts = 0,
+        TotalParts = 0
+    };
+
+    dbContext.WorkOrders.Add(workOrder);
+    await dbContext.SaveChangesAsync();
+
+    return Results.Redirect($"/admin?created={workOrderNumber}");
+});
+
+// Delete work order endpoint
+app.MapDelete("/admin/work-order/{workOrderId}/delete", async (string workOrderId, ShopFloorDbContext dbContext) =>
+{
+    var workOrder = await dbContext.WorkOrders
+        .Include(w => w.Products)
+        .ThenInclude(p => p.Parts)
+        .FirstOrDefaultAsync(w => w.WorkOrderId == workOrderId);
+    
+    if (workOrder == null)
+    {
+        return Results.NotFound();
+    }
+
+    // Remove all associated parts and products
+    foreach (var product in workOrder.Products)
+    {
+        dbContext.Parts.RemoveRange(product.Parts);
+    }
+    dbContext.Products.RemoveRange(workOrder.Products);
+    dbContext.WorkOrders.Remove(workOrder);
+    
+    await dbContext.SaveChangesAsync();
+    
+    return Results.Ok();
+});
 
 app.MapGet("/sorting", async (ShopFloorDbContext context) =>
 {
@@ -288,7 +550,7 @@ app.MapGet("/sorting", async (ShopFloorDbContext context) =>
             {
                 var isOccupied = rack.Parts.Any(p => p.StorageRow == row && p.StorageColumn == col);
                 var slotClass = isOccupied ? "slot-occupied" : "slot-available";
-                var slotContent = isOccupied ? "●" : "○";
+                var slotContent = isOccupied ? "X" : "O";
                 
                 html += $@"<div class='rack-slot {slotClass}' title='Row {row}, Col {col}'>{slotContent}</div>";
             }
@@ -605,8 +867,8 @@ app.MapGet("/assembly", async (ShopFloorDbContext context) =>
         {
             var partClass = part.Status == ShopFloorTracker.Core.Enums.PartStatus.Sorted ? "part-sorted" : "part-pending";
             var locationInfo = part.StorageRack != null 
-                ? $"📍 {part.StorageRack.Name} R{part.StorageRow}C{part.StorageColumn}" 
-                : "❓ Not Located";
+                ? $"[{part.StorageRack.Name} R{part.StorageRow}C{part.StorageColumn}]" 
+                : "[Not Located]";
 
             html += $@"
                 <div class='{partClass} part-card'>
@@ -620,7 +882,7 @@ app.MapGet("/assembly", async (ShopFloorDbContext context) =>
             </div>
             <form method='post' action='/assembly/complete' style='margin-top: 10px;'>
                 <input type='hidden' name='productNumber' value='{product.ProductNumber}'>
-                <button type='submit' class='assemble-button'>✓ Mark as Assembled</button>
+                <button type='submit' class='assemble-button'>Mark as Assembled</button>
             </form>
         </div>";
     }
