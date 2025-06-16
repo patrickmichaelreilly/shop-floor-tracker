@@ -10,6 +10,7 @@ public class Product
     public string? ProductName { get; set; }
     public string? ProductType { get; set; }
     public ProductStatus Status { get; set; } = ProductStatus.Pending;
+    public string? MicrovellumLinkID { get; set; }
     public DateTime? AssemblyDate { get; set; }
     public DateTime? ShippedDate { get; set; }
     public int TotalParts { get; set; }
@@ -19,4 +20,5 @@ public class Product
     public virtual WorkOrder WorkOrder { get; set; } = null!;
     public virtual ICollection<Part> Parts { get; set; } = new List<Part>();
     public virtual ICollection<Subassembly> Subassemblies { get; set; } = new List<Subassembly>();
+    public virtual ICollection<Hardware> Hardware { get; set; } = new List<Hardware>();
 }

@@ -18,6 +18,9 @@ public class ShopFloorDbContext : DbContext
     public DbSet<DetachedProduct> DetachedProducts { get; set; }
     public DbSet<StorageRack> StorageRacks { get; set; }
     public DbSet<ScanActivity> ScanActivities { get; set; }
+    public DbSet<PlacedSheet> PlacedSheets { get; set; }
+    public DbSet<PartPlacement> PartPlacements { get; set; }
+    public DbSet<ImportHistory> ImportHistory { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +34,7 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.WorkOrderNumber).HasMaxLength(100).IsRequired();
             entity.Property(e => e.CustomerName).HasMaxLength(200);
             entity.Property(e => e.Status).HasConversion<string>();
+            entity.Property(e => e.MicrovellumLinkID).HasMaxLength(50);
         });
 
         // Configure Product entity
@@ -43,6 +47,7 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.ProductName).HasMaxLength(200);
             entity.Property(e => e.ProductType).HasMaxLength(50);
             entity.Property(e => e.Status).HasConversion<string>();
+            entity.Property(e => e.MicrovellumLinkID).HasMaxLength(50);
 
             entity.HasOne(d => d.WorkOrder)
                   .WithMany(p => p.Products)
@@ -59,9 +64,12 @@ public class ShopFloorDbContext : DbContext
             entity.Property(e => e.PartNumber).HasMaxLength(100).IsRequired();
             entity.Property(e => e.PartName).HasMaxLength(200);
             entity.Property(e => e.Material).HasMaxLength(100);
+            entity.Property(e => e.MaterialName).HasMaxLength(100);
+            entity.Property(e => e.MaterialCode).HasMaxLength(50);
             entity.Property(e => e.EdgeBanding).HasMaxLength(200);
             entity.Property(e => e.NestingSheet).HasMaxLength(100);
             entity.Property(e => e.Status).HasConversion<string>();
+            entity.Property(e => e.MicrovellumLinkID).HasMaxLength(50);
 
             entity.HasOne(d => d.Product)
                   .WithMany(p => p.Parts)
@@ -97,10 +105,16 @@ public class ShopFloorDbContext : DbContext
         {
             entity.HasKey(e => e.HardwareId);
             entity.Property(e => e.HardwareId).HasMaxLength(50);
+            entity.Property(e => e.HardwareName).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.HardwareDescription).HasMaxLength(500);
+            entity.Property(e => e.ProductId).HasMaxLength(50).IsRequired();
             entity.Property(e => e.WorkOrderId).HasMaxLength(50).IsRequired();
-            entity.Property(e => e.HardwareNumber).HasMaxLength(100).IsRequired();
-            entity.Property(e => e.HardwareName).HasMaxLength(200);
             entity.Property(e => e.Status).HasConversion<string>();
+            entity.Property(e => e.MicrovellumLinkID).HasMaxLength(50);
+
+            entity.HasOne(d => d.Product)
+                  .WithMany(p => p.Hardware)
+                  .HasForeignKey(d => d.ProductId);
 
             entity.HasOne(d => d.WorkOrder)
                   .WithMany(p => p.Hardware)
@@ -147,6 +161,55 @@ public class ShopFloorDbContext : DbContext
             entity.HasOne(d => d.Part)
                   .WithMany(p => p.ScanActivities)
                   .HasForeignKey(d => d.PartId);
+        });
+
+        // Configure PlacedSheet entity
+        modelBuilder.Entity<PlacedSheet>(entity =>
+        {
+            entity.HasKey(e => e.PlacedSheetId);
+            entity.Property(e => e.PlacedSheetId).HasMaxLength(50);
+            entity.Property(e => e.SheetName).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.BarCode).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.FileName).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.WorkOrderId).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.MaterialType).HasMaxLength(100);
+            entity.Property(e => e.Status).HasMaxLength(20);
+            entity.Property(e => e.MicrovellumLinkID).HasMaxLength(50);
+
+            entity.HasOne(d => d.WorkOrder)
+                  .WithMany(p => p.PlacedSheets)
+                  .HasForeignKey(d => d.WorkOrderId);
+        });
+
+        // Configure PartPlacement entity
+        modelBuilder.Entity<PartPlacement>(entity =>
+        {
+            entity.HasKey(e => e.PlacementId);
+            entity.Property(e => e.PartId).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.PlacedSheetId).HasMaxLength(50).IsRequired();
+
+            entity.HasOne(d => d.Part)
+                  .WithMany(p => p.PartPlacements)
+                  .HasForeignKey(d => d.PartId);
+
+            entity.HasOne(d => d.PlacedSheet)
+                  .WithMany(p => p.PartPlacements)
+                  .HasForeignKey(d => d.PlacedSheetId);
+        });
+
+        // Configure ImportHistory entity
+        modelBuilder.Entity<ImportHistory>(entity =>
+        {
+            entity.HasKey(e => e.ImportId);
+            entity.Property(e => e.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.FilePath).HasMaxLength(500);
+            entity.Property(e => e.ImportedBy).HasMaxLength(100);
+            entity.Property(e => e.WorkOrderId).HasMaxLength(50);
+
+            entity.HasOne(d => d.WorkOrder)
+                  .WithMany()
+                  .HasForeignKey(d => d.WorkOrderId);
         });
     }
 }

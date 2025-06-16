@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\ShopFloorTracker.Application\ShopFloorTracker.Application.csproj" />
     <ProjectReference Include="..\ShopFloorTracker.Core\ShopFloorTracker.Core.csproj" />
   </ItemGroup>
 

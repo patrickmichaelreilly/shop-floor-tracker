@@ -16,8 +16,12 @@ builder.Services.AddDbContext<ShopFloorDbContext>(options =>
 // Add SignalR services
 builder.Services.AddSignalR();
 
+// Add anti-forgery services
+builder.Services.AddAntiforgery();
+
 // Add custom services
 builder.Services.AddScoped<IStatusBroadcaster, StatusBroadcaster>();
+builder.Services.AddScoped<ShopFloorTracker.Application.Interfaces.IMicrovellumImportService, ShopFloorTracker.Application.Services.MicrovellumImportService>();
 builder.Services.AddHostedService<HeartbeatService>();
 
 var app = builder.Build();
@@ -59,6 +63,9 @@ app.UseExceptionHandler(appError =>
         }
     });
 });
+
+// Add anti-forgery middleware
+app.UseAntiforgery();
 
 // Shared SignalR client scripts for all station pages
 const string SignalRClientScript = @"
@@ -162,6 +169,7 @@ app.MapGet("/", async (ShopFloorDbContext context) =>
     <div class='navigation'>
         <h3>Station Access</h3>
         <div class='nav-links'>
+            <a href='/cnc' class='nav-link'>CNC Station</a>
             <a href='/admin' class='nav-link'>Admin Station</a>
             <a href='/sorting' class='nav-link'>Sorting Station</a>
             <a href='/assembly' class='nav-link'>Assembly Station</a>
@@ -1286,6 +1294,30 @@ app.MapGet("/admin", async (HttpContext context, ShopFloorDbContext dbContext) =
                 <button class='form-button danger-button' onclick='clearCompletedOrders()'>Clear Completed Orders</button>
             </div>
         </div>
+    </div>
+    
+    <div class='work-order-management' style='grid-column: 1 / -1; margin-top: 20px;'>
+        <h3>Microvellum Import</h3>
+        <div class='row' style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px;'>
+            <div>
+                <label for='sdfFile' class='form-label' style='display: block; margin-bottom: 5px; font-weight: bold; color: #2c3e50;'>Upload SDF File</label>
+                <input type='file' id='sdfFile' class='form-input' style='margin-bottom: 10px;' accept='.sdf' />
+                <button id='uploadImportBtn' class='form-button' onclick='uploadAndImport()'>Upload & Import</button>
+                <div id='uploadProgress' style='margin-top: 10px; display: none;'>
+                    <div style='background-color: #ecf0f1; border-radius: 4px; overflow: hidden;'>
+                        <div id='progressBar' style='height: 20px; background-color: #3498db; width: 0%; transition: width 0.3s;'></div>
+                    </div>
+                    <div id='progressText' style='text-align: center; margin-top: 5px; font-size: 0.9em; color: #7f8c8d;'>Preparing upload...</div>
+                </div>
+            </div>
+            <div>
+                <h6 style='margin-bottom: 10px; font-weight: bold; color: #2c3e50;'>Import History</h6>
+                <div id='importHistory' class='border p-2' style='height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background-color: #f8f9fa;'>
+                    Loading...
+                </div>
+            </div>
+        </div>
+        <div id='importStatus' class='mt-3' style='margin-top: 15px;'></div>
     </div>" + SignalRClientScript + @"
     
     <script>
@@ -1346,6 +1378,366 @@ app.MapGet("/admin", async (HttpContext context, ShopFloorDbContext dbContext) =
                 alert('Clear completed orders functionality will be implemented in the next phase.');
             }}
         }}
+        
+        // Microvellum Import Functions
+        async function loadImportHistory() {{
+            try {{
+                const response = await fetch('/api/import/history');
+                const history = await response.json();
+                
+                const historyDiv = document.getElementById('importHistory');
+                if (history.length === 0) {{
+                    historyDiv.innerHTML = '<div style=""color: #7f8c8d; text-align: center; padding: 20px;"">No import history found</div>';
+                    return;
+                }}
+                
+                historyDiv.innerHTML = history.map(item => `
+                    <div style=""border-bottom: 1px solid #ecf0f1; padding: 10px 0; margin-bottom: 10px;"">
+                        <div style=""font-weight: bold; color: #2c3e50;"">${{item.fileName}}</div>
+                        <div style=""font-size: 0.9em; color: #7f8c8d; margin-top: 2px;"">
+                            ${{new Date(item.importDate).toLocaleString()}}
+                        </div>
+                        <div style=""font-size: 0.85em; margin-top: 5px;"">
+                            <span class=""${{item.status === 'Success' ? 'text-success' : 'text-danger'}}"" style=""color: ${{item.status === 'Success' ? '#27ae60' : '#e74c3c'}};"">
+                                ${{item.status}}
+                            </span>
+                            ${{item.status === 'Success' ? 
+                                ` | WO: ${{item.workOrdersCreated}} | Products: ${{item.productsCreated}} | Parts: ${{item.partsCreated}}` :
+                                ` | Error: ${{item.errorMessage || 'Unknown error'}}`
+                            }}
+                        </div>
+                    </div>
+                `).join('');
+            }} catch (error) {{
+                document.getElementById('importHistory').innerHTML = 
+                    '<div style=""color: #e74c3c; text-align: center; padding: 20px;"">Error loading import history</div>';
+                console.error('Error loading import history:', error);
+            }}
+        }}
+        
+        async function uploadAndImport() {{
+            const fileInput = document.getElementById('sdfFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {{
+                showImportStatus('Please select an SDF file to upload.', 'error');
+                return;
+            }}
+            
+            if (!file.name.toLowerCase().endsWith('.sdf')) {{
+                showImportStatus('Please select a valid SDF file.', 'error');
+                return;
+            }}
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Show progress
+            document.getElementById('uploadProgress').style.display = 'block';
+            document.getElementById('uploadImportBtn').disabled = true;
+            document.getElementById('progressText').textContent = 'Uploading file...';
+            
+            try {{
+                // Simulate progress for upload
+                let progress = 0;
+                const progressInterval = setInterval(() => {{
+                    progress += 10;
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    if (progress >= 50) {{
+                        document.getElementById('progressText').textContent = 'Processing import...';
+                    }}
+                    if (progress >= 90) {{
+                        clearInterval(progressInterval);
+                    }}
+                }}, 200);
+                
+                const response = await fetch('/api/import/sdf', {{
+                    method: 'POST',
+                    body: formData
+                }});
+                
+                clearInterval(progressInterval);
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressText').textContent = 'Complete!';
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {{
+                    showImportStatus(`
+                        <strong>Import Successful!</strong><br>
+                        Work Orders: ${{result.workOrdersCreated}}<br>
+                        Products: ${{result.productsCreated}}<br>
+                        Parts: ${{result.partsCreated}}<br>
+                        Hardware: ${{result.hardwareCreated}}<br>
+                        Placed Sheets: ${{result.placedSheetsCreated}}<br>
+                        Part Placements: ${{result.partPlacementsCreated}}
+                    `, 'success');
+                    
+                    // Clear file input
+                    fileInput.value = '';
+                    
+                    // Refresh import history
+                    await loadImportHistory();
+                    
+                    // Refresh page statistics
+                    setTimeout(() => {{
+                        location.reload();
+                    }}, 2000);
+                }} else {{
+                    showImportStatus(`Import failed: ${{result.message || 'Unknown error'}}`, 'error');
+                    if (result.errors && result.errors.length > 0) {{
+                        showImportStatus(`Errors: ${{result.errors.join(', ')}}`, 'error');
+                    }}
+                }}
+            }} catch (error) {{
+                showImportStatus(`Import failed: ${{error.message}}`, 'error');
+                console.error('Import error:', error);
+            }} finally {{
+                document.getElementById('uploadProgress').style.display = 'none';
+                document.getElementById('uploadImportBtn').disabled = false;
+            }}
+        }}
+        
+        function showImportStatus(message, type) {{
+            const statusDiv = document.getElementById('importStatus');
+            const bgColor = type === 'success' ? '#d5f4e6' : '#f8d7da';
+            const borderColor = type === 'success' ? '#27ae60' : '#e74c3c';
+            const textColor = type === 'success' ? '#1e7e34' : '#721c24';
+            
+            statusDiv.innerHTML = `
+                <div style=""background-color: ${{bgColor}}; border: 1px solid ${{borderColor}}; color: ${{textColor}}; padding: 15px; border-radius: 4px; margin-bottom: 15px;"">
+                    ${{message}}
+                </div>
+            `;
+            
+            // Auto-hide after 10 seconds for success messages
+            if (type === 'success') {{
+                setTimeout(() => {{
+                    statusDiv.innerHTML = '';
+                }}, 10000);
+            }}
+        }}
+        
+        // Load import history when page loads
+        document.addEventListener('DOMContentLoaded', function() {{
+            loadImportHistory();
+        }});
+    </script>
+</body>
+</html>";
+
+    return Results.Content(html, "text/html");
+});
+
+app.MapGet("/cnc", async (ShopFloorDbContext context) =>
+{
+    // Get available placed sheets for scanning
+    var availableSheets = await context.PlacedSheets
+        .Where(ps => ps.Status == "Pending")
+        .OrderBy(ps => ps.CreatedDate)
+        .ToListAsync();
+    
+    // Get recently cut sheets
+    var recentlyCutSheets = await context.PlacedSheets
+        .Where(ps => ps.Status == "Cut")
+        .OrderByDescending(ps => ps.CreatedDate)
+        .Take(10)
+        .ToListAsync();
+
+    var html = @"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>CNC Station - Nest Sheet Scanning</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .header { background-color: #34495e; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { color: #3498db; text-decoration: none; font-size: 16px; }
+        .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .scan-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .sheets-list { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .recent-cuts { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); grid-column: 1 / -1; }
+        .scan-input { width: 250px; padding: 12px; font-size: 16px; border: 2px solid #34495e; border-radius: 4px; }
+        .scan-button { background-color: #34495e; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-left: 10px; }
+        .scan-button:hover { background-color: #2c3e50; }
+        .sheet-item { border: 1px solid #ecf0f1; padding: 15px; margin-bottom: 10px; border-radius: 4px; }
+        .sheet-item:hover { background-color: #f8f9fa; }
+        .sheet-header { font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+        .sheet-details { color: #7f8c8d; font-size: 0.9em; }
+        .status-pending { border-left: 4px solid #f39c12; }
+        .status-cut { border-left: 4px solid #27ae60; }
+        .result-message { margin-top: 15px; padding: 10px; border-radius: 4px; display: none; }
+        .result-success { background-color: #d5f4e6; border: 1px solid #27ae60; color: #1e7e34; }
+        .result-error { background-color: #f8d7da; border: 1px solid #e74c3c; color: #721c24; }
+        
+        /* Flash animation for live updates */
+        .flash { animation: flash 1s ease-in-out; }
+        @keyframes flash {
+            0% { background-color: inherit; }
+            50% { background-color: #fff3cd; border-color: #ffeaa7; }
+            100% { background-color: inherit; }
+        }
+    </style>
+</head>
+<body>
+    <div class='header'>
+        <h1>CNC Station</h1>
+        <p>Nest Sheet Scanning for Batch Processing</p>
+    </div>
+    
+    <div class='nav'>
+        <a href='/'>&larr; Back to Dashboard</a>
+    </div>
+    
+    <div class='content-grid'>
+        <div class='scan-section'>
+            <h3>Nest Sheet Scanner</h3>
+            <p>Scan nest sheet barcode to mark all parts as Cut:</p>
+            <form id='scanForm' onsubmit='scanSheet(event)'>
+                <input type='text' id='barcodeInput' class='scan-input' placeholder='Scan nest sheet barcode' autofocus>
+                <button type='submit' class='scan-button'>Process Sheet</button>
+            </form>
+            <div id='scanResult' class='result-message'></div>
+            
+            <h4 style='margin-top: 25px;'>Quick Stats</h4>
+            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;'>
+                <div style='text-align: center; padding: 10px; background-color: #ecf0f1; border-radius: 4px;'>
+                    <div style='font-size: 1.5em; font-weight: bold; color: #f39c12;'>" + availableSheets.Count + @"</div>
+                    <div style='font-size: 0.9em; color: #7f8c8d;'>Sheets Ready</div>
+                </div>
+                <div style='text-align: center; padding: 10px; background-color: #ecf0f1; border-radius: 4px;'>
+                    <div style='font-size: 1.5em; font-weight: bold; color: #27ae60;'>" + recentlyCutSheets.Count + @"</div>
+                    <div style='font-size: 0.9em; color: #7f8c8d;'>Recently Cut</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class='sheets-list'>
+            <h3>Available Nest Sheets</h3>
+            <div style='max-height: 300px; overflow-y: auto;'>";
+
+    foreach (var sheet in availableSheets.Take(10))
+    {
+        html += $@"
+                <div class='sheet-item status-pending'>
+                    <div class='sheet-header'>{sheet.SheetName}</div>
+                    <div class='sheet-details'>
+                        Barcode: {sheet.BarCode}<br>
+                        Material: {sheet.MaterialType ?? "Unknown"}<br>
+                        Size: {sheet.Length}x{sheet.Width}x{sheet.Thickness}
+                    </div>
+                </div>";
+    }
+
+    if (!availableSheets.Any())
+    {
+        html += @"<div style='text-align: center; color: #7f8c8d; padding: 20px;'>No nest sheets available for cutting</div>";
+    }
+
+    html += @"
+            </div>
+        </div>
+    </div>
+    
+    <div class='recent-cuts'>
+        <h3>Recently Cut Sheets (" + recentlyCutSheets.Count + @")</h3>";
+
+    foreach (var sheet in recentlyCutSheets)
+    {
+        html += $@"
+        <div class='sheet-item status-cut'>
+            <div class='sheet-header'>{sheet.SheetName} - COMPLETED</div>
+            <div class='sheet-details'>
+                Barcode: {sheet.BarCode} | Material: {sheet.MaterialType ?? "Unknown"} | Cut: {sheet.CreatedDate:yyyy-MM-dd HH:mm}
+            </div>
+        </div>";
+    }
+
+    if (!recentlyCutSheets.Any())
+    {
+        html += @"<div style='text-align: center; color: #7f8c8d; padding: 20px;'>No sheets have been cut yet</div>";
+    }
+
+    html += @"
+    </div>" + SignalRClientScript + @"
+    
+    <script>
+        async function scanSheet(event) {
+            event.preventDefault();
+            
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            if (!barcode) {
+                showResult('Please enter a barcode', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/cnc/scan-sheet/${encodeURIComponent(barcode)}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(`
+                        <strong>Success!</strong><br>
+                        Sheet: ${result.sheetName}<br>
+                        Parts processed: ${result.partsProcessed}<br>
+                        ${result.message}
+                    `, 'success');
+                    
+                    // Clear input
+                    document.getElementById('barcodeInput').value = '';
+                    
+                    // Refresh page after 2 seconds
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showResult(`Error: ${result.message || result}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+                console.error('Scan error:', error);
+            }
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('scanResult');
+            resultDiv.className = `result-message result-${type}`;
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    resultDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Auto-focus barcode input
+        document.getElementById('barcodeInput').focus();
+        
+        // Handle barcode scanner input (typically ends with Enter)
+        document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                scanSheet(e);
+            }
+        });
+        
+        // Handle SignalR part status updates
+        connection.on('PartStatusChanged', function (partId, newStatus) {
+            console.log('Part status changed:', partId, '->', newStatus);
+            // Flash the page to indicate updates
+            document.body.classList.add('flash');
+            setTimeout(() => {
+                document.body.classList.remove('flash');
+            }, 1000);
+        });
     </script>
 </body>
 </html>";
@@ -1370,6 +1762,91 @@ app.MapGet("/shipping", () => Results.Content(@"
 
 // Map SignalR hub
 app.MapHub<StatusHub>("/hubs/status");
+
+// Microvellum Import endpoints
+app.MapPost("/api/import/sdf", async (
+    IFormFile file,
+    ShopFloorTracker.Application.Interfaces.IMicrovellumImportService importService) =>
+{
+    if (file == null || file.Length == 0)
+        return Results.BadRequest("No file uploaded");
+
+    if (!file.FileName.EndsWith(".sdf", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest("Only .sdf files are supported");
+
+    var tempPath = Path.GetTempFileName();
+    try
+    {
+        using var stream = File.Create(tempPath);
+        await file.CopyToAsync(stream);
+        
+        var result = await importService.ImportWorkOrderAsync(tempPath);
+        return Results.Ok(result);
+    }
+    finally
+    {
+        if (File.Exists(tempPath))
+            File.Delete(tempPath);
+    }
+}).DisableAntiforgery();
+
+app.MapGet("/api/import/history", async (ShopFloorDbContext db) =>
+{
+    var history = await db.ImportHistory
+        .OrderByDescending(h => h.ImportDate)
+        .Take(10)
+        .ToListAsync();
+    return Results.Ok(history);
+});
+
+// CNC Nest Sheet Scanning endpoint
+app.MapPost("/api/cnc/scan-sheet/{barcode}", async (
+    string barcode,
+    ShopFloorDbContext db,
+    IStatusBroadcaster broadcaster) =>
+{
+    // Find the placed sheet by barcode
+    var placedSheet = await db.PlacedSheets
+        .FirstOrDefaultAsync(ps => ps.BarCode == barcode);
+        
+    if (placedSheet == null)
+        return Results.NotFound($"Nest sheet with barcode {barcode} not found");
+    
+    // Get all parts on this sheet
+    var partsOnSheet = await db.PartPlacements
+        .Include(pp => pp.Part)
+        .Where(pp => pp.PlacedSheetId == placedSheet.PlacedSheetId)
+        .ToListAsync();
+    
+    if (!partsOnSheet.Any())
+        return Results.BadRequest("No parts found on this nest sheet");
+    
+    // Mark all parts as Cut
+    foreach (var placement in partsOnSheet)
+    {
+        placement.Part.Status = ShopFloorTracker.Core.Enums.PartStatus.Cut;
+        placement.Part.ModifiedDate = DateTime.UtcNow;
+    }
+    
+    // Mark sheet as Cut
+    placedSheet.Status = "Cut";
+    
+    await db.SaveChangesAsync();
+    
+    // Broadcast status changes
+    foreach (var placement in partsOnSheet)
+    {
+        await broadcaster.BroadcastPartStatusAsync(placement.Part);
+    }
+    
+    return Results.Ok(new
+    {
+        Message = $"Marked {partsOnSheet.Count} parts as Cut from sheet {placedSheet.SheetName}",
+        SheetName = placedSheet.SheetName,
+        PartsProcessed = partsOnSheet.Count,
+        PartIds = partsOnSheet.Select(p => p.Part.PartId).ToList()
+    });
+});
 
 // Map API endpoints
 app.MapSummaryEndpoints();

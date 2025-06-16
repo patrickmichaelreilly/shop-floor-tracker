@@ -10,6 +10,7 @@ public class WorkOrder
     public DateTime? OrderDate { get; set; }
     public DateTime? DueDate { get; set; }
     public WorkOrderStatus Status { get; set; } = WorkOrderStatus.Active;
+    public string? MicrovellumLinkID { get; set; }
     public DateTime ImportedDate { get; set; } = DateTime.UtcNow;
     public string? ImportedBy { get; set; }
     public string? ImportFilePath { get; set; }
@@ -21,4 +22,5 @@ public class WorkOrder
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     public virtual ICollection<Hardware> Hardware { get; set; } = new List<Hardware>();
     public virtual ICollection<DetachedProduct> DetachedProducts { get; set; } = new List<DetachedProduct>();
+    public virtual ICollection<PlacedSheet> PlacedSheets { get; set; } = new List<PlacedSheet>();
 }

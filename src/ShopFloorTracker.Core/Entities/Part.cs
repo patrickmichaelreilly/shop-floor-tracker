@@ -10,12 +10,15 @@ public class Part
     public string PartNumber { get; set; } = string.Empty;
     public string? PartName { get; set; }
     public string? Material { get; set; }
+    public string? MaterialName { get; set; }
+    public string? MaterialCode { get; set; }
     public decimal? Thickness { get; set; }
     public decimal? Length { get; set; }
     public decimal? Width { get; set; }
     public string? EdgeBanding { get; set; }
     public string? NestingSheet { get; set; }
     public PartStatus Status { get; set; } = PartStatus.Pending;
+    public string? MicrovellumLinkID { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DateTime ModifiedDate { get; set; } = DateTime.UtcNow;
     
@@ -30,4 +33,5 @@ public class Part
     public virtual Subassembly? Subassembly { get; set; }
     public virtual StorageRack? StorageRack { get; set; }
     public virtual ICollection<ScanActivity> ScanActivities { get; set; } = new List<ScanActivity>();
+    public virtual ICollection<PartPlacement> PartPlacements { get; set; } = new List<PartPlacement>();
 }

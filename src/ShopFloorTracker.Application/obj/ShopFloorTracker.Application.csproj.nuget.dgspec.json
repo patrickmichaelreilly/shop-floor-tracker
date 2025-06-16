@@ -28,6 +28,9 @@
             "projectReferences": {
               "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Core/ShopFloorTracker.Core.csproj": {
                 "projectPath": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Core/ShopFloorTracker.Core.csproj"
+              },
+              "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Infrastructure/ShopFloorTracker.Infrastructure.csproj": {
+                "projectPath": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Infrastructure/ShopFloorTracker.Infrastructure.csproj"
               }
             }
           }
@@ -46,6 +49,20 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.6, )"
+            },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[9.0.6, )"
+            },
+            "Microsoft.SqlServer.Compact": {
+              "target": "Package",
+              "version": "[4.0.8876.1, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -104,6 +121,86 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.411/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Infrastructure/ShopFloorTracker.Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Infrastructure/ShopFloorTracker.Infrastructure.csproj",
+        "projectName": "ShopFloorTracker.Infrastructure",
+        "projectPath": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Infrastructure/ShopFloorTracker.Infrastructure.csproj",
+        "packagesPath": "/home/patrick/.nuget/packages/",
+        "outputPath": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Infrastructure/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/patrick/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Core/ShopFloorTracker.Core.csproj": {
+                "projectPath": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Core/ShopFloorTracker.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

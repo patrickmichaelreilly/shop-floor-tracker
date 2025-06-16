@@ -16,6 +16,7 @@ CREATE TABLE WorkOrders (
     OrderDate DATETIME,
     DueDate DATETIME,
     Status NVARCHAR(20) DEFAULT 'Active', -- Active, Complete, Shipped
+    MicrovellumLinkID NVARCHAR(50),
     ImportedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     ImportedBy NVARCHAR(100),
     ImportFilePath NVARCHAR(500),
@@ -33,6 +34,7 @@ CREATE TABLE Products (
     ProductName NVARCHAR(200),
     ProductType NVARCHAR(50), -- Cabinet, Vanity, etc.
     Status NVARCHAR(20) DEFAULT 'Pending', -- Pending, Sorting, Ready, Assembled, Shipped
+    MicrovellumLinkID NVARCHAR(50),
     AssemblyDate DATETIME,
     ShippedDate DATETIME,
     TotalParts INT DEFAULT 0,
@@ -63,12 +65,15 @@ CREATE TABLE Parts (
     PartNumber NVARCHAR(100) NOT NULL,
     PartName NVARCHAR(200),
     Material NVARCHAR(100),
-    Thickness DECIMAL(5,3),
-    Length DECIMAL(8,3),
-    Width DECIMAL(8,3),
+    MaterialName NVARCHAR(100),
+    MaterialCode NVARCHAR(50),
+    Thickness DECIMAL(10,4),
+    Length DECIMAL(10,4),
+    Width DECIMAL(10,4),
     EdgeBanding NVARCHAR(200),
     NestingSheet NVARCHAR(100),
     Status NVARCHAR(20) DEFAULT 'Pending', -- Pending, Cut, Sorted, Assembled, Shipped
+    MicrovellumLinkID NVARCHAR(50),
     CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     ModifiedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ProductId) REFERENCES Products(ProductId),
@@ -78,15 +83,49 @@ CREATE TABLE Parts (
 -- Hardware items (shipped but not manufactured)
 CREATE TABLE Hardware (
     HardwareId NVARCHAR(50) PRIMARY KEY,
+    HardwareName NVARCHAR(200) NOT NULL,
+    HardwareDescription NVARCHAR(500),
+    ProductId NVARCHAR(50) NOT NULL,
     WorkOrderId NVARCHAR(50) NOT NULL,
-    HardwareNumber NVARCHAR(100) NOT NULL,
-    HardwareName NVARCHAR(200),
     Quantity INT NOT NULL DEFAULT 1,
     Status NVARCHAR(20) DEFAULT 'Pending', -- Pending, Included, Shipped
+    MicrovellumLinkID NVARCHAR(50),
     IncludedDate DATETIME,
     CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     ModifiedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ProductId) REFERENCES Products(ProductId),
     FOREIGN KEY (WorkOrderId) REFERENCES WorkOrders(WorkOrderId)
+);
+
+-- Placed Sheets (CNC nesting optimization results)
+CREATE TABLE PlacedSheets (
+    PlacedSheetId NVARCHAR(50) PRIMARY KEY,
+    SheetName NVARCHAR(200) NOT NULL,
+    BarCode NVARCHAR(100) NOT NULL,
+    FileName NVARCHAR(100) NOT NULL,
+    WorkOrderId NVARCHAR(50) NOT NULL,
+    MaterialType NVARCHAR(100),
+    Length DECIMAL(10,4),
+    Width DECIMAL(10,4), 
+    Thickness DECIMAL(10,4),
+    Status NVARCHAR(20) DEFAULT 'Pending',
+    MicrovellumLinkID NVARCHAR(50),
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (WorkOrderId) REFERENCES WorkOrders(WorkOrderId)
+);
+
+-- Part Placements (tracks which parts are on which sheets)
+CREATE TABLE PartPlacements (
+    PlacementId UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    PartId NVARCHAR(50) NOT NULL,
+    PlacedSheetId NVARCHAR(50) NOT NULL,
+    XCoord DECIMAL(10,4),
+    YCoord DECIMAL(10,4),
+    Rotation INT DEFAULT 0,
+    IsFlipped BIT DEFAULT 0,
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (PartId) REFERENCES Parts(PartId),
+    FOREIGN KEY (PlacedSheetId) REFERENCES PlacedSheets(PlacedSheetId)
 );
 
 -- Detached Products (items requiring no manufacturing)
@@ -223,15 +262,21 @@ CREATE TABLE SystemSettings (
 -- Import History (tracks all work order imports)
 CREATE TABLE ImportHistory (
     ImportId UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    FileName NVARCHAR(500) NOT NULL,
-    FilePath NVARCHAR(500) NOT NULL,
-    FileSize BIGINT,
+    FileName NVARCHAR(255) NOT NULL,
     ImportDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Status NVARCHAR(50) NOT NULL,
+    RecordsImported INT DEFAULT 0,
+    ErrorMessage NVARCHAR(MAX),
+    WorkOrdersCreated INT DEFAULT 0,
+    ProductsCreated INT DEFAULT 0,
+    PartsCreated INT DEFAULT 0,
+    HardwareCreated INT DEFAULT 0,
+    PlacedSheetsCreated INT DEFAULT 0,
+    PartPlacementsCreated INT DEFAULT 0,
+    FilePath NVARCHAR(500),
+    FileSize BIGINT,
     ImportedBy NVARCHAR(100),
-    Status NVARCHAR(20) NOT NULL, -- Success, Failed, Partial
-    RecordsProcessed INT DEFAULT 0,
     ErrorCount INT DEFAULT 0,
-    ErrorDetails NVARCHAR(MAX),
     WorkOrderId NVARCHAR(50),
     CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (WorkOrderId) REFERENCES WorkOrders(WorkOrderId)
@@ -264,6 +309,17 @@ CREATE INDEX IX_PartProcessHistory_ProcessedDate ON PartProcessHistory(Processed
 -- Date-based indexes for reporting
 CREATE INDEX IX_WorkOrders_DueDate ON WorkOrders(DueDate);
 CREATE INDEX IX_WorkOrders_ImportedDate ON WorkOrders(ImportedDate);
+
+-- Microvellum integration indexes
+CREATE INDEX IX_PlacedSheets_WorkOrderId ON PlacedSheets(WorkOrderId);
+CREATE INDEX IX_PlacedSheets_Status ON PlacedSheets(Status);
+CREATE INDEX IX_PartPlacements_PartId ON PartPlacements(PartId);
+CREATE INDEX IX_PartPlacements_PlacedSheetId ON PartPlacements(PlacedSheetId);
+CREATE INDEX IX_Hardware_ProductId ON Hardware(ProductId);
+CREATE INDEX IX_Hardware_WorkOrderId ON Hardware(WorkOrderId);
+CREATE INDEX IX_Parts_MicrovellumLinkID ON Parts(MicrovellumLinkID);
+CREATE INDEX IX_Products_MicrovellumLinkID ON Products(MicrovellumLinkID);
+CREATE INDEX IX_WorkOrders_MicrovellumLinkID ON WorkOrders(MicrovellumLinkID);
 
 -- =====================================================
 -- INITIAL DATA SETUP

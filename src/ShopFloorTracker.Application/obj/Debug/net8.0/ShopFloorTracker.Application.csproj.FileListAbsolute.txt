@@ -14,3 +14,5 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/refint/ShopFloorTracker.Application.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ShopFloorTracker.Application.pdb
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/obj/Debug/net8.0/ref/ShopFloorTracker.Application.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/bin/Debug/net8.0/ShopFloorTracker.Infrastructure.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Application/bin/Debug/net8.0/ShopFloorTracker.Infrastructure.pdb
