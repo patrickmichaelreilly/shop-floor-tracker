@@ -1183,6 +1183,7 @@ app.MapGet("/admin", async (HttpContext context, ShopFloorDbContext dbContext) =
                     <div class='tab-button active' onclick='showTab(""manage"")'>Manage Work Orders</div>
                     <div class='tab-button' onclick='showTab(""create"")'>Create New</div>
                     <div class='tab-button' onclick='showTab(""import"")'>Import CSV</div>
+                    <div class='tab-button' onclick='showTab(""microvellum"")'>Microvellum Import</div>
                 </div>
                 
                 <div id='tab-manage' class='tab-content active'>
@@ -1253,6 +1254,34 @@ app.MapGet("/admin", async (HttpContext context, ShopFloorDbContext dbContext) =
                         </div>
                         <button type='submit' class='form-button'>Import CSV</button>
                     </form>
+                </div>
+                
+                <div id='tab-microvellum' class='tab-content'>
+                    <h3>Microvellum Import</h3>
+                    <p style='color: #7f8c8d; margin-bottom: 15px;'>
+                        Upload Microvellum .sdf files to import work orders, parts, and nesting data.
+                    </p>
+                    
+                    <div class='form-group'>
+                        <label class='form-label'>Microvellum SDF File</label>
+                        <input type='file' id='sdfFile' class='form-input' accept='.sdf' />
+                    </div>
+                    
+                    <button id='uploadImportBtn' class='form-button' onclick='uploadAndImport()'>Upload and Import</button>
+                    
+                    <div id='uploadProgress' style='display: none; margin: 15px 0;'>
+                        <div style='background-color: #ecf0f1; border-radius: 4px; overflow: hidden;'>
+                            <div id='progressBar' style='width: 0%; height: 20px; background-color: #3498db; transition: width 0.3s ease;'></div>
+                        </div>
+                        <div id='progressText' style='margin-top: 5px; color: #7f8c8d; font-size: 0.9em;'>Uploading...</div>
+                    </div>
+                    
+                    <div id='importStatus'></div>
+                    
+                    <div style='margin-top: 25px;'>
+                        <h4>Import History</h4>
+                        <div id='importHistory'>Loading...</div>
+                    </div>
                 </div>
             </div>
         </div>
