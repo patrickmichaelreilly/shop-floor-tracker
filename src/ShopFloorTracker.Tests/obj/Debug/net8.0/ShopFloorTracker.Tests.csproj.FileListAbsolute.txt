@@ -3,6 +3,7 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/ShopFloorTracker.Web.runtimeconfig.json
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/appsettings.Development.json
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/appsettings.json
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/ShopFloorTracker.Web.staticwebassets.runtime.json
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/ShopFloorTracker.Web
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/MvcTestingAppManifest.json
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/xunit.runner.visualstudio.dotnetcore.testadapter.dll
@@ -310,7 +311,9 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.InMemory.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Sqlite.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Caching.Abstractions.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Caching.Memory.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Configuration.Abstractions.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Configuration.Binder.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Configuration.FileExtensions.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Configuration.Json.dll
@@ -331,6 +334,7 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Logging.EventSource.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.ObjectPool.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Options.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Primitives.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.WebEncoders.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.TestPlatform.CoreUtilities.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.TestPlatform.PlatformAbstractions.dll
@@ -346,10 +350,14 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/SQLitePCLRaw.batteries_v2.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/SQLitePCLRaw.core.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/SQLitePCLRaw.provider.e_sqlite3.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Diagnostics.DiagnosticSource.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Diagnostics.EventLog.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.IO.Pipelines.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Net.WebSockets.WebSocketProtocol.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Security.Cryptography.Pkcs.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Security.Cryptography.Xml.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Text.Encodings.Web.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Text.Json.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/xunit.abstractions.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/xunit.assert.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/xunit.core.dll
@@ -426,6 +434,7 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/linux-mips64/native/libe_sqlite3.so
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/linux-musl-arm/native/libe_sqlite3.so
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/linux-musl-arm64/native/libe_sqlite3.so
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/linux-musl-s390x/native/libe_sqlite3.so
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/linux-musl-x64/native/libe_sqlite3.so
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/linux-ppc64le/native/libe_sqlite3.so
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/linux-s390x/native/libe_sqlite3.so
@@ -442,6 +451,7 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/win/lib/net8.0/System.Diagnostics.EventLog.Messages.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/win/lib/net8.0/System.Diagnostics.EventLog.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll
+/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/browser/lib/net8.0/System.Text.Encodings.Web.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/ShopFloorTracker.Application.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/ShopFloorTracker.Core.dll
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/ShopFloorTracker.Infrastructure.dll
@@ -463,12 +473,3 @@
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/obj/Debug/net8.0/ShopFloorTracker.Tests.pdb
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/obj/Debug/net8.0/ShopFloorTracker.Tests.genruntimeconfig.cache
 /home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/obj/Debug/net8.0/ref/ShopFloorTracker.Tests.dll
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Caching.Abstractions.dll
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Configuration.Abstractions.dll
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/Microsoft.Extensions.Primitives.dll
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Diagnostics.DiagnosticSource.dll
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.IO.Pipelines.dll
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Text.Encodings.Web.dll
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/System.Text.Json.dll
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/linux-musl-s390x/native/libe_sqlite3.so
-/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Tests/bin/Debug/net8.0/runtimes/browser/lib/net8.0/System.Text.Encodings.Web.dll

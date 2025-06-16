@@ -1,11 +1,58 @@
 {
   "Version": 1,
-  "Hash": "MKtV+5qTp7NXd8rs7YbPADgyxd8KAE4tldYmKl67TXw=",
+  "Hash": "Dl+fVPNxLqrOR77M1WVLpb4kN0IYs2NUfhdJzyNUenY=",
   "Source": "ShopFloorTracker.Web",
   "BasePath": "_content/ShopFloorTracker.Web",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "ShopFloorTracker.Web/wwwroot",
+      "Source": "ShopFloorTracker.Web",
+      "ContentRoot": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/wwwroot/",
+      "BasePath": "_content/ShopFloorTracker.Web",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/wwwroot/js/assembly-live.js",
+      "SourceId": "ShopFloorTracker.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/wwwroot/",
+      "BasePath": "_content/ShopFloorTracker.Web",
+      "RelativePath": "js/assembly-live.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/js/assembly-live.js"
+    },
+    {
+      "Identity": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/wwwroot/js/sorting-live.js",
+      "SourceId": "ShopFloorTracker.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/patrick/shop-floor-tracker/src/ShopFloorTracker.Web/wwwroot/",
+      "BasePath": "_content/ShopFloorTracker.Web",
+      "RelativePath": "js/sorting-live.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/js/sorting-live.js"
+    }
+  ]
 }
