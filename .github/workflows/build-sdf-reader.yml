@@ -17,19 +17,22 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Setup .NET Framework 4.8 Developer Pack
-      run: |
-        Invoke-WebRequest -Uri "https://download.microsoft.com/download/7/4/0/740c7986-81ed-4d9e-9d84-4e7b8b4a6bbf/ndp48-devpack-enu.exe" -OutFile "ndp48-devpack.exe"
-        Start-Process -FilePath "ndp48-devpack.exe" -ArgumentList "/quiet" -Wait
-
     - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.3
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Setup .NET Framework
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v1
 
     - name: Restore NuGet packages
       run: nuget restore SdfReader/SdfReader.sln
 
     - name: Build SDF Reader
-      run: msbuild SdfReader/SdfReader.sln /p:Configuration=Release /p:Platform="Any CPU"
+      run: msbuild SdfReader/SdfReader.sln /p:Configuration=Release /p:Platform="Any CPU" /p:OutputPath=bin\Release\ /verbosity:minimal
 
     - name: Create output directory
       run: |
