@@ -46,4 +46,4 @@ The program outputs JSON to stdout containing all tables from the SDF file.
 
 ## Integration
 
-The main .NET 8 application calls this executable via `Process.Start()` and parses the JSON output to import data into the main SQLite database.
+The main .NET 8 application calls this executable via `Process.Start()` and parses the JSON output to import data into the main SQLite database.# Build trigger
