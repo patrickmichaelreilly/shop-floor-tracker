@@ -20,8 +20,11 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.3
 
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v1
+
     - name: Restore NuGet packages
-      run: msbuild src/SdfReader/SdfReader.csproj /t:Restore
+      run: nuget restore src/SdfReader/packages.config -PackagesDirectory src/packages
 
     - name: Build SDF Reader
       run: msbuild src/SdfReader/SdfReader.csproj /p:Configuration=Release
