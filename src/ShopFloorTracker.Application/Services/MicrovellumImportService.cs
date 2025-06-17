@@ -125,6 +125,11 @@ public class MicrovellumImportService : IMicrovellumImportService
     private string GetSdfReaderPath()
     {
         var appDirectory = AppContext.BaseDirectory;
+        
+        var wrapperPath = Path.Combine(appDirectory, "SdfReaderWrapper.bat");
+        if (File.Exists(wrapperPath))
+            return wrapperPath;
+            
         return Path.Combine(appDirectory, "SdfReader.exe");
     }
 
