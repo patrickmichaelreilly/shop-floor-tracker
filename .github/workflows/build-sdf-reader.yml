@@ -46,5 +46,5 @@ jobs:
 
     - name: Commit and push if changed
       run: |
-        git add src/SdfReader/bin/Debug/SdfReader.exe
+        git add -f src/SdfReader/bin/Debug/SdfReader.exe
         git diff --staged --quiet || (git commit -m "Auto-build: Update SdfReader.exe" && git push)
