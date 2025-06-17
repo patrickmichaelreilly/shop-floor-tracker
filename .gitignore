@@ -14,6 +14,9 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Exception: Allow SdfReader.exe for deployment
+!src/SdfReader/bin/Debug/SdfReader.exe
+
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 
