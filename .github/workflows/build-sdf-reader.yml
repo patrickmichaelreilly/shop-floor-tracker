@@ -1,0 +1,52 @@
+name: Build SDF Reader
+
+on:
+  push:
+    branches: [ main, master ]
+    paths: 
+      - 'SdfReader/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup .NET Framework 4.8 Developer Pack
+      run: |
+        Invoke-WebRequest -Uri "https://download.microsoft.com/download/7/4/0/740c7986-81ed-4d9e-9d84-4e7b8b4a6bbf/ndp48-devpack-enu.exe" -OutFile "ndp48-devpack.exe"
+        Start-Process -FilePath "ndp48-devpack.exe" -ArgumentList "/quiet" -Wait
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3
+
+    - name: Restore NuGet packages
+      run: nuget restore SdfReader/SdfReader.sln
+
+    - name: Build SDF Reader
+      run: msbuild SdfReader/SdfReader.sln /p:Configuration=Release /p:Platform="Any CPU"
+
+    - name: Create output directory
+      run: |
+        if (!(Test-Path "SdfReader/bin/Debug")) {
+          New-Item -ItemType Directory -Path "SdfReader/bin/Debug" -Force
+        }
+
+    - name: Copy executable to expected location
+      run: |
+        Copy-Item "SdfReader/bin/Release/SdfReader.exe" "SdfReader/bin/Debug/SdfReader.exe" -Force
+
+    - name: Configure Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+    - name: Commit and push if changed
+      run: |
+        git add SdfReader/bin/Debug/SdfReader.exe
+        git diff --staged --quiet || (git commit -m "Auto-build: Update SdfReader.exe" && git push)
