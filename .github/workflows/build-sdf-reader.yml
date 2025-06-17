@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main, master ]
     paths: 
-      - 'SdfReader/**'
+      - 'src/SdfReader/**'
   workflow_dispatch:
 
 jobs:
@@ -21,20 +21,20 @@ jobs:
       uses: microsoft/setup-msbuild@v1.3
 
     - name: Restore NuGet packages
-      run: msbuild SdfReader/SdfReader.csproj /t:Restore
+      run: msbuild src/SdfReader/SdfReader.csproj /t:Restore
 
     - name: Build SDF Reader
-      run: msbuild SdfReader/SdfReader.csproj /p:Configuration=Release
+      run: msbuild src/SdfReader/SdfReader.csproj /p:Configuration=Release
 
     - name: Create output directory
       run: |
-        if (!(Test-Path "SdfReader/bin/Debug")) {
-          New-Item -ItemType Directory -Path "SdfReader/bin/Debug" -Force
+        if (!(Test-Path "src/SdfReader/bin/Debug")) {
+          New-Item -ItemType Directory -Path "src/SdfReader/bin/Debug" -Force
         }
 
     - name: Copy executable to expected location
       run: |
-        Copy-Item "SdfReader/bin/Release/SdfReader.exe" "SdfReader/bin/Debug/SdfReader.exe" -Force
+        Copy-Item "src/SdfReader/bin/Release/SdfReader.exe" "src/SdfReader/bin/Debug/SdfReader.exe" -Force
 
     - name: Configure Git
       run: |
@@ -43,5 +43,5 @@ jobs:
 
     - name: Commit and push if changed
       run: |
-        git add SdfReader/bin/Debug/SdfReader.exe
+        git add src/SdfReader/bin/Debug/SdfReader.exe
         git diff --staged --quiet || (git commit -m "Auto-build: Update SdfReader.exe" && git push)
